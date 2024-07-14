@@ -9,4 +9,5 @@ name = "fisher"
 crate-type = ["cdylib"]
 
 [dependencies]
+factorial = "0.4.0"
 pyo3 = "0.22.0"
