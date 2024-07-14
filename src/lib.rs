@@ -1,20 +1,16 @@
-use factorial::Factorial;
+use math::Quotient;
 use pyo3::prelude::*;
-use std::cmp::min;
+use std::{cmp::min, vec};
 
-struct Pos(i32, i32);
+mod math;
 
-macro_rules! fac {
-    ($x:expr) => {
-        f64::try_from($x.checked_factorial().unwrap()).unwrap()
-    };
-}
+struct Pos(i64, i64);
 
 fn _dfs(
-    mat: Vec<Vec<u32>>,
+    mat: &mut Vec<Vec<u64>>,
     pos: Pos,
-    r_sum: &Vec<u32>,
-    c_sum: &Vec<u32>,
+    r_sum: &Vec<u64>,
+    c_sum: &Vec<u64>,
     p_0: f64,
     p: &mut Vec<f64>,
 ) {
@@ -25,11 +21,7 @@ fn _dfs(
     let mut mat_new = vec![];
 
     for i in 0..mat.len() {
-        let mut temp = vec![];
-        for j in 0..mat[0].len() {
-            temp.push(mat[i][j]);
-        }
-        mat_new.push(temp);
+        mat_new.push(mat[i].clone());
     }
 
     if xx == -1 && yy == -1 {
@@ -47,38 +39,40 @@ fn _dfs(
             }
             mat_new[r - 1][j] = temp;
         }
-        let mut temp: i32 = r_sum[r - 1].try_into().unwrap();
+
+        let mut temp = r_sum[r - 1];
         for j in 0..c - 1 {
-            temp -= i32::try_from(mat_new[r - 1][j]).unwrap();
-        }
-        if temp < 0 {
-            return;
-        }
-        mat_new[r - 1][c - 1] = temp.try_into().unwrap();
-
-        let mut p_1 = 1.0;
-
-        for x in r_sum.clone() {
-            p_1 *= fac!(x);
-        }
-        for y in c_sum {
-            p_1 *= fac!(y);
-        }
-
-        let mut n = 0;
-        for x in r_sum {
-            n += x;
-        }
-        p_1 /= fac!(n);
-
-        for i in 0..mat_new.len() {
-            for j in 0..mat_new[0].len() {
-                p_1 /= fac!(mat_new[i][j]);
+            if temp < mat_new[r - 1][j] {
+                return;
+            } else {
+                temp -= mat_new[r - 1][j];
             }
         }
 
-        if p_1 <= p_0 + 0.00000001 {
-            p[0] += p_1;
+        mat_new[r - 1][c - 1] = temp.try_into().unwrap();
+
+        let mut p_1 = Quotient::default();
+
+        let mut n = 0;
+
+        for x in r_sum.clone() {
+            p_1.mul_fact(x);
+            n += x;
+        }
+        for y in c_sum.clone() {
+            p_1.mul_fact(y);
+        }
+        p_1.div_fact(n);
+
+        for i in 0..mat_new.len() {
+            for j in 0..mat_new[0].len() {
+                p_1.div_fact(mat_new[i][j]);
+            }
+        }
+
+        let p_1_res = p_1.solve();
+        if p_1_res <= p_0 + 0.00000001 {
+            p[0] += p_1_res;
         }
     } else {
         let x_idx: usize = xx.try_into().unwrap();
@@ -91,7 +85,7 @@ fn _dfs(
             max_1 -= mat_new[x_idx][j];
         }
         for i in 0..r {
-            max_2 = mat_new[i][y_idx];
+            max_2 -= mat_new[i][y_idx];
         }
         for k in 0..=min(max_1, max_2) {
             mat_new[x_idx][y_idx] = k;
@@ -104,15 +98,59 @@ fn _dfs(
                 pos_new = Pos(xx + 1, yy);
             }
 
-            _dfs(mat_new.clone(), pos_new, r_sum, c_sum, p_0, p);
+            _dfs(&mut mat_new, pos_new, r_sum, c_sum, p_0, p);
         }
     }
 }
 
 /// Formats the sum of two numbers as string.
 #[pyfunction]
-fn exact(a: usize, b: usize) -> PyResult<String> {
-    Ok((a + b).to_string())
+pub fn exact(table: Vec<Vec<u64>>) -> PyResult<f64> {
+    let mut row_sum: Vec<u64> = vec![];
+    let mut col_sum: Vec<u64> = vec![];
+
+    for i in 0..table.len() {
+        let mut temp = 0u64;
+        for j in 0..table[0].len() {
+            temp += table[i][j];
+        }
+        row_sum.push(temp);
+    }
+
+    for j in 0..table[0].len() {
+        let mut temp = 0;
+        for i in 0..table.len() {
+            temp += table[i][j];
+        }
+        col_sum.push(temp);
+    }
+
+    let mut mat = vec![vec![0; col_sum.len()]; row_sum.len()];
+    let pos = Pos(0, 0);
+
+    let mut p_0 = Quotient::default();
+    let mut n = 0;
+
+    for x in row_sum.clone() {
+        p_0.mul_fact(x);
+        n += x;
+    }
+    for y in col_sum.clone() {
+        p_0.mul_fact(y);
+    }
+
+    p_0.div_fact(n);
+
+    for i in 0..table.len() {
+        for j in 0..table[0].len() {
+            p_0.div_fact(table[i][j]);
+        }
+    }
+
+    let mut p = vec![0.0];
+    _dfs(&mut mat, pos, &row_sum, &col_sum, p_0.solve(), &mut p);
+
+    return Ok(p[0]);
 }
 
 /// A Python module implemented in Rust.
@@ -120,4 +158,35 @@ fn exact(a: usize, b: usize) -> PyResult<String> {
 fn fisher(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(exact, m)?)?;
     Ok(())
+}
+
+#[test]
+fn size2x2() {
+    let input = vec![vec![3, 4], vec![4, 2]];
+    let output = exact(input).unwrap();
+    assert_eq!(output, 0.5920745920745921);
+}
+
+#[test]
+fn size4x4() {
+    let input = vec![
+        vec![4, 1, 0, 1],
+        vec![1, 5, 0, 0],
+        vec![1, 1, 4, 2],
+        vec![1, 1, 0, 3],
+    ];
+    let output = exact(input).unwrap();
+    assert_eq!(output, 0.01096124432190799);
+}
+
+#[test]
+fn size5x4() {
+    let input = vec![
+        vec![3, 1, 1, 1, 0],
+        vec![1, 4, 1, 0, 0],
+        vec![2, 1, 3, 2, 0],
+        vec![1, 1, 1, 2, 0],
+    ];
+    let output = exact(input).unwrap();
+    assert_eq!(output, 0.6388806191300838);
 }
