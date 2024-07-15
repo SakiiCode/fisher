@@ -1,39 +1,42 @@
 #[derive(Default)]
 pub struct Quotient {
-    numerator: Vec<u64>,
-    denominator: Vec<u64>,
+    numerator: Vec<f64>,
+    denominator: Vec<f64>,
 }
 
 impl Quotient {
-    pub fn mul_fact(&mut self, x: u64) {
+    pub fn mul_fact(&mut self, x: u32) {
         for i in 2..=x {
-            self.numerator.push(i);
+            self.numerator.push(i.into());
         }
     }
 
-    pub fn div_fact(&mut self, x: u64) {
+    pub fn div_fact(&mut self, x: u32) {
         for i in 2..=x {
-            self.denominator.push(i);
+            self.denominator.push(i.into());
         }
     }
 
-    pub fn solve(&self) -> f64 {
-        let mut result = 1.0;
-        let max_index = std::cmp::min(self.numerator.len(), self.denominator.len());
-        for i in 0..max_index {
-            result *= self.numerator[i] as f64 / self.denominator[i] as f64;
-        }
+    pub fn solve(&mut self) -> f64 {
+        let mut result = self
+            .numerator
+            .iter()
+            .zip(self.denominator.iter())
+            .fold(1.0, |result, (n, d)| (result * n / d));
 
-        if self.numerator.len() == max_index {
-            for i in max_index..self.denominator.len() {
-                result /= self.denominator[i] as f64;
+        let n = self.numerator.len();
+        let d = self.denominator.len();
+
+        if n > d {
+            for i in d..n {
+                result *= self.numerator[i];
             }
-        } else {
-            for i in max_index..self.numerator.len() {
-                result *= self.numerator[i] as f64;
+        } else if n < d {
+            for i in n..d {
+                result /= self.denominator[i];
             }
         }
-        result
+        return result;
     }
 }
 
@@ -68,6 +71,19 @@ fn test2() {
 
 #[test]
 fn test3() {
+    let mut q = Quotient::default();
+    q.mul_fact(5);
+    q.mul_fact(6);
+
+    q.div_fact(3);
+    q.div_fact(4);
+    q.div_fact(6);
+
+    assert!(float_cmp::approx_eq!(f64, q.solve(), 5.0 / 6.0));
+}
+
+#[test]
+fn test4() {
     let mut q = Quotient::default();
     q.mul_fact(6);
     q.mul_fact(6);

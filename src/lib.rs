@@ -9,10 +9,10 @@ mod math;
 struct Pos(i64, i64);
 
 fn _dfs(
-    mat: &mut Vec<Vec<u64>>,
+    mat: &Vec<Vec<u32>>,
     pos: Pos,
-    r_sum: &Vec<u64>,
-    c_sum: &Vec<u64>,
+    r_sum: &Vec<u32>,
+    c_sum: &Vec<u32>,
     p_0: f64,
     p: &mut Vec<f64>,
 ) {
@@ -20,11 +20,7 @@ fn _dfs(
     let r = r_sum.len();
     let c = c_sum.len();
 
-    let mut mat_new = vec![];
-
-    for i in 0..mat.len() {
-        mat_new.push(mat[i].clone());
-    }
+    let mut mat_new = mat.clone();
 
     if xx == -1 && yy == -1 {
         for i in 0..r - 1 {
@@ -57,18 +53,19 @@ fn _dfs(
 
         let mut n = 0;
 
-        for x in r_sum.clone() {
-            p_1.mul_fact(x);
+        for x in r_sum {
+            p_1.mul_fact(*x);
             n += x;
         }
-        for y in c_sum.clone() {
-            p_1.mul_fact(y);
+        for y in c_sum {
+            p_1.mul_fact(*y);
         }
+
         p_1.div_fact(n);
 
-        for i in 0..mat_new.len() {
-            for j in 0..mat_new[0].len() {
-                p_1.div_fact(mat_new[i][j]);
+        for row in &mat_new {
+            for cell in row {
+                p_1.div_fact(*cell);
             }
         }
 
@@ -100,24 +97,16 @@ fn _dfs(
                 pos_new = Pos(xx + 1, yy);
             }
 
-            _dfs(&mut mat_new, pos_new, r_sum, c_sum, p_0, p);
+            _dfs(&mat_new, pos_new, r_sum, c_sum, p_0, p);
         }
     }
 }
 
 /// Formats the sum of two numbers as string.
 #[pyfunction]
-pub fn exact(table: Vec<Vec<u64>>) -> PyResult<f64> {
-    let mut row_sum: Vec<u64> = vec![];
-    let mut col_sum: Vec<u64> = vec![];
-
-    for i in 0..table.len() {
-        let mut temp = 0u64;
-        for j in 0..table[0].len() {
-            temp += table[i][j];
-        }
-        row_sum.push(temp);
-    }
+pub fn recursive(table: Vec<Vec<u32>>) -> PyResult<f64> {
+    let row_sum: Vec<u32> = table.iter().map(|row| row.iter().sum()).collect();
+    let mut col_sum: Vec<u32> = vec![];
 
     for j in 0..table[0].len() {
         let mut temp = 0;
@@ -127,46 +116,38 @@ pub fn exact(table: Vec<Vec<u64>>) -> PyResult<f64> {
         col_sum.push(temp);
     }
 
-    let mut mat = vec![vec![0; col_sum.len()]; row_sum.len()];
+    let mat = vec![vec![0; col_sum.len()]; row_sum.len()];
     let pos = Pos(0, 0);
 
     let mut p_0 = Quotient::default();
     let mut n = 0;
 
-    for x in row_sum.clone() {
-        p_0.mul_fact(x);
+    for x in &row_sum {
+        p_0.mul_fact(*x);
         n += x;
     }
-    for y in col_sum.clone() {
-        p_0.mul_fact(y);
+    for y in &col_sum {
+        p_0.mul_fact(*y);
     }
 
     p_0.div_fact(n);
 
-    for i in 0..table.len() {
-        for j in 0..table[0].len() {
-            p_0.div_fact(table[i][j]);
+    for row in &table {
+        for cell in row {
+            p_0.div_fact(*cell);
         }
     }
 
     let mut p = vec![0.0];
-    _dfs(&mut mat, pos, &row_sum, &col_sum, p_0.solve(), &mut p);
+    _dfs(&mat, pos, &row_sum, &col_sum, p_0.solve(), &mut p);
 
     return Ok(p[0]);
 }
 
 #[pyfunction]
 pub fn sim(table: Vec<Vec<u32>>, iterations: u32) -> PyResult<f64> {
-    let mut row_sum: Vec<u32> = vec![];
+    let row_sum: Vec<u32> = table.iter().map(|row| row.iter().sum()).collect();
     let mut col_sum: Vec<u32> = vec![];
-
-    for i in 0..table.len() {
-        let mut temp = 0u32;
-        for j in 0..table[0].len() {
-            temp += table[i][j];
-        }
-        row_sum.push(temp);
-    }
 
     for j in 0..table[0].len() {
         let mut temp = 0;
@@ -176,14 +157,7 @@ pub fn sim(table: Vec<Vec<u32>>, iterations: u32) -> PyResult<f64> {
         col_sum.push(temp);
     }
 
-    let mut rng = rand::thread_rng();
-
-    let mut results = vec![];
-
-    let mut n: usize = 0;
-    for sum in row_sum.clone() {
-        n += usize::try_from(sum).unwrap();
-    }
+    let n = row_sum.iter().sum::<u32>().try_into().unwrap();
 
     let mut fact = vec![0.0; n + 1];
     fact[0] = 0.0;
@@ -194,48 +168,34 @@ pub fn sim(table: Vec<Vec<u32>>, iterations: u32) -> PyResult<f64> {
         x += 1.0;
     }
 
-    //dbg!(fact.clone());
+    let mut row_sum_i = row_sum.iter().map(|s| (*s).try_into().unwrap()).collect();
+    let mut col_sum_i = col_sum.iter().map(|s| (*s).try_into().unwrap()).collect();
 
-    let mut row_sum_i = vec![];
-    let mut col_sum_i = vec![];
-    for s in row_sum.clone() {
-        row_sum_i.push(s.try_into().unwrap());
-    }
-    for s in col_sum.clone() {
-        col_sum_i.push(s.try_into().unwrap());
-    }
+    let mut rng = rand::thread_rng();
+    let nrow = row_sum.len();
+    let ncol = col_sum.len();
+    let statistic = find_statistic_r(&table, &fact);
+    let mut sum = 0.0;
 
-    for _ in 0..iterations {
-        let nrow = row_sum.len();
-        let ncol = col_sum.len();
-        unsafe {
+    unsafe {
+        for _ in 0..iterations {
             let table = generate(&mut row_sum_i, &mut col_sum_i, rng.gen::<i32>());
-            //dbg!(table.clone());
             // STATISTIC <- -sum(lfactorial(x))
-            let ans = find_statistic_c(table, nrow, ncol, &fact);
-            results.push(ans);
+            let ans = find_statistic_c(&table, nrow, ncol, &fact);
+
+            if ans <= statistic + 0.00000001 {
+                sum += 1.0;
+            }
         }
     }
-
-    //dbg!(results.clone());
 
     // PVAL <- (1 + sum(tmp <= STATISTIC/almost.1)) / (B + 1)
-
-    let mut sum = 0.0;
-    let statistic = find_statistic_r(table, &fact);
-
-    for i in 0..iterations {
-        if results[i as usize] <= statistic + 0.00000001 {
-            sum += 1.0;
-        }
-    }
-
     let pvalue = (1.0 + sum) / (iterations as f64 + 1.0);
 
     return Ok(pvalue);
 }
 
-fn find_statistic_c(table: Vec<i32>, nrow: usize, ncol: usize, fact: &Vec<f64>) -> f64 {
+fn find_statistic_c(table: &Vec<i32>, nrow: usize, ncol: usize, fact: &Vec<f64>) -> f64 {
     let mut ans = 0.0;
     for i in 0..nrow {
         for j in 0..ncol {
@@ -245,34 +205,32 @@ fn find_statistic_c(table: Vec<i32>, nrow: usize, ncol: usize, fact: &Vec<f64>) 
     return ans;
 }
 
-fn find_statistic_r(table: Vec<Vec<u32>>, fact: &Vec<f64>) -> f64 {
+fn find_statistic_r(table: &Vec<Vec<u32>>, fact: &Vec<f64>) -> f64 {
     let mut ans = 0.0;
     for row in table {
         for cell in row {
-            ans -= fact[cell as usize];
+            ans -= fact[*cell as usize];
         }
     }
     return ans;
 }
 
-unsafe fn generate(row_sum: &Vec<i32>, col_sum: &Vec<i32>, seed: i32) -> Vec<i32> {
-    let mut seed = [seed; 1];
-    let mut key = [0; 1];
+unsafe fn generate(row_sum: &mut Vec<i32>, col_sum: &mut Vec<i32>, seed: i32) -> Vec<i32> {
+    let mut seed = [seed];
+    let mut key = [0];
     let size = row_sum.len() * col_sum.len();
     let mut matrix = vec![0; size];
-    let mut ierror = [0; 1];
+    let mut ierror = [0];
     asa159::rcont2(
         i32::try_from(row_sum.len()).unwrap(),
         i32::try_from(col_sum.len()).unwrap(),
-        row_sum.clone().as_mut_ptr(),
-        col_sum.clone().as_mut_ptr(),
+        row_sum.as_mut_ptr(),
+        col_sum.as_mut_ptr(),
         key.as_mut_ptr(),
         seed.as_mut_ptr(),
         matrix.as_mut_ptr(),
         ierror.as_mut_ptr(),
     );
-    //dbg!(ierror);
-    //dbg!(matrix);
     if ierror[0] != 0 {
         panic!("Error generating contingency table ({})", ierror[0]);
     }
@@ -282,20 +240,21 @@ unsafe fn generate(row_sum: &Vec<i32>, col_sum: &Vec<i32>, seed: i32) -> Vec<i32
 /// A Python module implemented in Rust.
 #[pymodule]
 fn fisher(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(exact, m)?)?;
     m.add_function(wrap_pyfunction!(sim, m)?)?;
+    m.add_function(wrap_pyfunction!(exact, m)?)?;
     Ok(())
 }
 
 #[test]
-fn size2x2() {
+fn rec2x2() {
     let input = vec![vec![3, 4], vec![4, 2]];
     let output = exact(input).unwrap();
-    assert_eq!(output, 0.5920745920745921);
+    dbg!(output);
+    assert_eq!(output, 0.5920745920745922);
 }
 
 #[test]
-fn size4x4() {
+fn rec4x4() {
     let input = vec![
         vec![4, 1, 0, 1],
         vec![1, 5, 0, 0],
@@ -303,12 +262,12 @@ fn size4x4() {
         vec![1, 1, 0, 3],
     ];
     let output = exact(input).unwrap();
+    dbg!(output);
     assert_eq!(output, 0.01096124432190799);
 }
 
-/*
 #[test]
-fn size5x4() {
+fn rec5x4() {
     let input = vec![
         vec![3, 1, 1, 1, 0],
         vec![1, 4, 1, 0, 0],
@@ -316,17 +275,32 @@ fn size5x4() {
         vec![1, 1, 1, 2, 0],
     ];
     let output = exact(input).unwrap();
+    dbg!(output);
     assert_eq!(output, 0.6388806191300838);
-}*/
+}
+
+/*
+#[test]
+fn rec5x5() {
+    let input = vec![
+        vec![3, 1, 1, 1, 0],
+        vec![1, 4, 1, 0, 0],
+        vec![2, 1, 3, 2, 0],
+        vec![1, 1, 1, 2, 0],
+        vec![1, 1, 0, 0, 3],
+    ];
+    let result = exact(input).unwrap();
+    dbg!(result);
+    assert_eq!(result, 0.2467871156117748);
+}
+*/
 
 #[test]
 fn sim2x2() {
     let input = vec![vec![3, 4], vec![4, 2]];
-    let result = sim(input.clone(), 10000).unwrap();
+    let result = sim(input, 10000).unwrap();
     dbg!(result);
     assert!(float_cmp::approx_eq!(f64, result, 0.592, epsilon = 0.02));
-    //sim(input.clone(), 12345, 1).unwrap();
-    //assert_eq!(output, 0.5920745920745921);
 }
 
 #[test]
@@ -337,7 +311,7 @@ fn sim4x4() {
         vec![1, 1, 4, 2],
         vec![1, 1, 0, 3],
     ];
-    let result = sim(input.clone(), 10000).unwrap();
+    let result = sim(input, 10000).unwrap();
     dbg!(result);
     assert!(float_cmp::approx_eq!(f64, result, 0.011, epsilon = 0.004));
 }
