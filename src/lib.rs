@@ -4,6 +4,7 @@ use rand::Rng;
 use std::{cmp::min, vec};
 
 mod asa159;
+mod asa643;
 mod math;
 
 struct Pos(i64, i64);
@@ -195,6 +196,48 @@ pub fn sim(table: Vec<Vec<u32>>, iterations: u32) -> PyResult<f64> {
     return Ok(pvalue);
 }
 
+#[pyfunction]
+pub fn exact(table: Vec<Vec<u32>>) -> PyResult<f64> {
+    let row_sum: Vec<u32> = table.iter().map(|row| row.iter().sum()).collect();
+    let mut col_sum: Vec<u32> = vec![];
+
+    let mut seq = vec![];
+    for j in 0..table[0].len() {
+        let mut temp = 0;
+        for i in 0..table.len() {
+            temp += table[i][j];
+            seq.push(table[i][j] as f64);
+        }
+        col_sum.push(temp);
+    }
+
+    let result;
+    unsafe {
+        let mut nrow = [row_sum.len() as i32; 1];
+        let mut ncol = [col_sum.len() as i32; 1];
+        let mut expect = [0.0];
+        let mut percnt = [0.0];
+        let mut emin = [0.0];
+        let mut prt = [0.0];
+        let mut pre = [0.0];
+        asa643::fexact_(
+            nrow.as_mut_ptr(),
+            ncol.as_mut_ptr(),
+            seq.as_mut_ptr(),
+            nrow.as_mut_ptr(),
+            expect.as_mut_ptr(),
+            percnt.as_mut_ptr(),
+            emin.as_mut_ptr(),
+            prt.as_mut_ptr(),
+            pre.as_mut_ptr(),
+        );
+
+        result = pre[0];
+    }
+
+    return Ok(result);
+}
+
 fn find_statistic_c(table: &Vec<i32>, nrow: usize, ncol: usize, fact: &Vec<f64>) -> f64 {
     let mut ans = 0.0;
     for i in 0..nrow {
@@ -240,6 +283,7 @@ unsafe fn generate(row_sum: &mut Vec<i32>, col_sum: &mut Vec<i32>, seed: i32) ->
 /// A Python module implemented in Rust.
 #[pymodule]
 fn fisher(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(recursive, m)?)?;
     m.add_function(wrap_pyfunction!(sim, m)?)?;
     m.add_function(wrap_pyfunction!(exact, m)?)?;
     Ok(())
@@ -248,7 +292,7 @@ fn fisher(m: &Bound<'_, PyModule>) -> PyResult<()> {
 #[test]
 fn rec2x2() {
     let input = vec![vec![3, 4], vec![4, 2]];
-    let output = exact(input).unwrap();
+    let output = recursive(input).unwrap();
     dbg!(output);
     assert_eq!(output, 0.5920745920745922);
 }
@@ -261,7 +305,7 @@ fn rec4x4() {
         vec![1, 1, 4, 2],
         vec![1, 1, 0, 3],
     ];
-    let output = exact(input).unwrap();
+    let output = recursive(input).unwrap();
     dbg!(output);
     assert_eq!(output, 0.01096124432190799);
 }
@@ -274,7 +318,7 @@ fn rec5x4() {
         vec![2, 1, 3, 2, 0],
         vec![1, 1, 1, 2, 0],
     ];
-    let output = exact(input).unwrap();
+    let output = recursive(input).unwrap();
     dbg!(output);
     assert_eq!(output, 0.6388806191300838);
 }
@@ -294,6 +338,86 @@ fn rec5x5() {
     assert_eq!(result, 0.2467871156117748);
 }
 */
+
+#[test]
+fn proc2x2() {
+    let input = vec![vec![3, 4], vec![4, 2]];
+    let output = exact(input).unwrap();
+    dbg!(output);
+    assert_eq!(output, 0.5920745920745918);
+}
+
+#[test]
+fn proc4x4() {
+    let input = vec![
+        vec![4, 1, 0, 1],
+        vec![1, 5, 0, 0],
+        vec![1, 1, 4, 2],
+        vec![1, 1, 0, 3],
+    ];
+    let output = exact(input).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.01096,
+        epsilon = 0.0001
+    ));
+}
+
+#[test]
+fn proc3x4big() {
+    let input = vec![
+        vec![11, 12, 18, 15],
+        vec![15, 13, 13, 15],
+        vec![15, 19, 19, 15],
+    ];
+    let output = exact(input).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.8821660735808745,
+        epsilon = 0.0001
+    ));
+}
+
+#[test]
+fn proc4x5big() {
+    let input = vec![
+        vec![8, 3, 5, 5, 6],
+        vec![4, 3, 8, 6, 5],
+        vec![2, 5, 3, 7, 6],
+        vec![4, 8, 2, 3, 6],
+    ];
+    let output = exact(input).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.8821660735808745,
+        epsilon = 0.0001
+    ));
+}
+
+#[test]
+fn proc5x5() {
+    let input = vec![
+        vec![3, 1, 1, 1, 0],
+        vec![1, 4, 1, 0, 0],
+        vec![2, 1, 3, 2, 0],
+        vec![1, 1, 1, 2, 0],
+        vec![1, 1, 0, 0, 3],
+    ];
+    let result = exact(input).unwrap();
+    dbg!(result);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        result,
+        0.22200753799676035,
+        epsilon = 0.0001
+    ));
+}
 
 #[test]
 fn sim2x2() {
