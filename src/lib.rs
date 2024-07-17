@@ -8,65 +8,65 @@ mod asa159;
 mod asa643;
 mod math;
 
-fn calc_p(mat_new: &mut Vec<Vec<u32>>, r_sum: &Vec<u32>, c_sum: &Vec<u32>, p_0: f64) -> f64 {
+macro_rules! idx {
+    ($arr:expr, $r:expr, $c:expr, $cols:expr) => {
+        $arr[$r * $cols + $c]
+    };
+}
+
+fn calc_p(mat_new: &mut Vec<u32>, r_sum: &Vec<u32>, c_sum: &Vec<u32>, p_0: f64) -> f64 {
     let r = r_sum.len();
     let c = c_sum.len();
+    print!("{:?} -> ", &mat_new);
+
     for i in 0..r - 1 {
         let mut temp = r_sum[i];
         for j in 0..c - 1 {
-            temp -= mat_new[i][j];
+            temp -= idx!(mat_new, i, j, c);
         }
-        mat_new[i][c - 1] = temp;
+        idx!(mat_new, i, c - 1, c) = temp;
     }
     for j in 0..c - 1 {
         let mut temp = c_sum[j];
         for i in 0..r - 1 {
-            temp -= mat_new[i][j];
+            temp -= idx!(mat_new, i, j, c);
         }
-        mat_new[r - 1][j] = temp;
+        idx!(mat_new, r - 1, j, c) = temp;
     }
 
     let mut temp = r_sum[r - 1];
     for j in 0..c - 1 {
-        if temp < mat_new[r - 1][j] {
+        if temp < idx!(mat_new, r - 1, j, c) {
+            println!();
             return 0.0;
         } else {
-            temp -= mat_new[r - 1][j];
+            temp -= idx!(mat_new, r - 1, j, c);
         }
     }
 
-    mat_new[r - 1][c - 1] = temp;
+    idx!(mat_new, r - 1, c - 1, c) = temp;
+    print!("{:?} ", &mat_new);
 
     let mut p_1 = Quotient::default();
 
-    let mut n = 0;
+    r_sum.iter().for_each(|x| p_1.mul_fact(*x));
+    c_sum.iter().for_each(|y| p_1.mul_fact(*y));
 
-    for x in r_sum {
-        p_1.mul_fact(*x);
-        n += x;
-    }
-    for y in c_sum {
-        p_1.mul_fact(*y);
-    }
-
-    p_1.div_fact(n);
-
-    for row in mat_new {
-        for cell in row {
-            p_1.div_fact(*cell);
-        }
-    }
+    p_1.div_fact(r_sum.iter().sum());
+    mat_new.iter().for_each(|i| p_1.div_fact(*i));
 
     let p_1_res = p_1.solve();
     if p_1_res <= p_0 + 0.00000001 {
+        println!(" p={}", p_1_res);
         return p_1_res;
     } else {
+        println!(" p=0.0");
         return 0.0;
     }
 }
 
 fn _dfs(
-    mat_new: &mut Vec<Vec<u32>>,
+    mat_new: &mut Vec<u32>,
     xx: usize,
     yy: usize,
     r_sum: &Vec<u32>,
@@ -75,30 +75,25 @@ fn _dfs(
 ) -> f64 {
     let r = r_sum.len();
     let c = c_sum.len();
+    let mut max_1 = r_sum[xx];
+    let mut max_2 = c_sum[yy];
 
-    let x_idx: usize = xx.try_into().unwrap();
-    let y_idx: usize = yy.try_into().unwrap();
+    for j in 0..c {
+        max_1 -= idx!(mat_new, xx, j, c);
+    }
 
-    let mut max_1 = r_sum[x_idx];
-    let mut max_2 = c_sum[y_idx];
-
-    /*for j in 0..c {
-        max_1 -= mat_new[x_idx][j];
-    }*/
-
-    max_1 -= mat_new[x_idx].iter().sum::<u32>();
     for i in 0..r {
-        max_2 -= mat_new[i][y_idx];
+        max_2 -= idx!(mat_new, i, yy, c);
     }
 
     return (0..=min(max_1, max_2))
-        .into_par_iter()
+        //.into_par_iter()
         .map(|k| {
             let mut mat_new2 = mat_new.clone();
-            mat_new2[x_idx][y_idx] = k;
-            if x_idx + 2 == r && y_idx + 2 == c {
+            idx!(mat_new2, xx, yy, c) = k;
+            if xx + 2 == r && yy + 2 == c {
                 return calc_p(&mut mat_new2, r_sum, c_sum, p_0);
-            } else if x_idx + 2 == r {
+            } else if xx + 2 == r {
                 return _dfs(&mut mat_new2, 0, yy + 1, r_sum, c_sum, p_0);
             } else {
                 return _dfs(&mut mat_new2, xx + 1, yy, r_sum, c_sum, p_0);
@@ -121,28 +116,16 @@ pub fn recursive(table: Vec<Vec<u32>>) -> PyResult<f64> {
         col_sum.push(temp);
     }
 
-    let mut mat = vec![vec![0; col_sum.len()]; row_sum.len()];
+    let mut mat = vec![0; col_sum.len() * row_sum.len()];
 
     let mut p_0 = Quotient::default();
-    let mut n = 0;
 
-    for x in &row_sum {
-        p_0.mul_fact(*x);
-        n += x;
-    }
-    for y in &col_sum {
-        p_0.mul_fact(*y);
-    }
+    row_sum.iter().for_each(|x| p_0.mul_fact(*x));
+    col_sum.iter().for_each(|y| p_0.mul_fact(*y));
 
-    p_0.div_fact(n);
+    p_0.div_fact(row_sum.iter().sum());
+    table.iter().flatten().for_each(|i| p_0.div_fact(*i));
 
-    for row in &table {
-        for cell in row {
-            p_0.div_fact(*cell);
-        }
-    }
-
-    //let mut p = vec![0.0];
     let p = _dfs(&mut mat, 0, 0, &row_sum, &col_sum, p_0.solve());
 
     return Ok(p);
@@ -313,6 +296,14 @@ fn rec2x2() {
 }
 
 #[test]
+fn rec3x3() {
+    let input = vec![vec![4, 1, 0], vec![1, 5, 0], vec![1, 1, 4]];
+    let output = recursive(input).unwrap();
+    dbg!(output);
+    assert_eq!(output, 0.005293725881961175);
+}
+
+#[test]
 fn rec4x4() {
     let input = vec![
         vec![4, 1, 0, 1],
@@ -328,6 +319,7 @@ fn rec4x4() {
 #[test]
 #[ignore]
 fn rec3x4big() {
+    // DNF
     let input = vec![
         vec![11, 12, 18, 15],
         vec![15, 13, 13, 15],
@@ -345,6 +337,7 @@ fn rec3x4big() {
 
 #[test]
 fn rec5x4() {
+    // 0.11s
     let input = vec![
         vec![3, 1, 1, 1, 0],
         vec![1, 4, 1, 0, 0],
@@ -358,6 +351,7 @@ fn rec5x4() {
 
 #[test]
 fn rec5x5() {
+    // 12.13s
     let input = vec![
         vec![3, 1, 1, 1, 0],
         vec![1, 4, 1, 0, 0],
