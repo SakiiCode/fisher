@@ -10,9 +10,6 @@
 extern "C" {
     fn malloc(_: u64) -> *mut libc::c_void;
     fn free(_: *mut libc::c_void);
-    fn printf(_: *const i8, _: ...) -> i32;
-    fn exp(_: f64) -> f64;
-    fn log(_: f64) -> f64;
 }
 #[no_mangle]
 pub unsafe extern "C" fn i4_max(i1: i32, i2: i32) -> i32 {
@@ -31,8 +28,8 @@ pub unsafe extern "C" fn i4_min(i1: i32, i2: i32) -> i32 {
     }
 }
 #[no_mangle]
-pub unsafe extern "C" fn i4mat_print(mut m: i32, mut n: i32, mut a: *mut i32, mut title: *mut i8) {
-    i4mat_print_some(m, n, a, 1 as i32, 1 as i32, m, n, title);
+pub unsafe extern "C" fn i4mat_print(mut m: i32, mut n: i32, mut a: *mut i32, mut title: &str) {
+    i4mat_print_some(m, n, a, 1, 1, m, n, title);
 }
 #[no_mangle]
 pub unsafe extern "C" fn i4mat_print_some(
@@ -43,7 +40,7 @@ pub unsafe extern "C" fn i4mat_print_some(
     mut jlo: i32,
     mut ihi: i32,
     mut jhi: i32,
-    mut title: *mut i8,
+    mut title: &str,
 ) {
     let mut i: i32 = 0;
     let mut i2hi: i32 = 0;
@@ -53,51 +50,48 @@ pub unsafe extern "C" fn i4mat_print_some(
     let mut j2lo: i32 = 0;
     println!("");
     println!("{}", title);
-    if m <= 0 as i32 || n <= 0 as i32 {
+    if m <= 0 || n <= 0 {
         println!("");
         println!("  (None)");
         return;
     }
     for j2lo in (jlo..=jhi).step_by(10) {
-        j2hi = j2lo + 10 as i32 - 1 as i32;
+        j2hi = j2lo + 10 - 1;
         j2hi = i4_min(j2hi, n);
         j2hi = i4_min(j2hi, jhi);
         println!("");
         print!("  Col:");
         for j in j2lo..=j2hi {
-            print!("  %6d", j - 1 as i32);
+            print!("  {:>6}", j - 1);
         }
         println!("");
         println!("  Row");
         println!("");
-        i2lo = i4_max(ilo, 1 as i32);
+        i2lo = i4_max(ilo, 1);
         i2hi = i4_min(ihi, m);
         for i in i2lo..=i2hi {
-            print!("%5d:", i - 1 as i32);
+            print!("{:>5}:", i - 1);
             for j in j2lo..=j2hi {
-                print!(
-                    b"  %6d",
-                    *a.offset((i - 1 as i32 + (j - 1 as i32) * m) as isize),
-                );
+                print!("  {:>6}", *a.offset((i - 1 + (j - 1) * m) as isize),);
             }
             println!("");
         }
     }
 }
 #[no_mangle]
-pub unsafe extern "C" fn i4vec_print(mut n: i32, mut a: *mut i32, mut title: *mut i8) {
+pub unsafe extern "C" fn i4vec_print(mut n: i32, mut a: *mut i32, mut title: &str) {
     let mut i: i32 = 0;
     println!("");
-    println!("%s", title);
+    println!("{}", title);
     println!("");
     for i in 0..n {
-        println!("  %6d: %8d", i, *a.offset(i as isize),);
+        println!("  {:>6}: {:>8}", i, *a.offset(i as isize),);
     }
 }
 #[no_mangle]
 pub unsafe extern "C" fn i4vec_sum(mut n: i32, mut a: *mut i32) -> i32 {
     let mut sum: i32 = 0;
-    sum = 0 as i32;
+    sum = 0;
     for i in 0..n {
         sum = sum + *a.offset(i as isize);
     }
@@ -107,10 +101,10 @@ pub unsafe extern "C" fn i4vec_sum(mut n: i32, mut a: *mut i32) -> i32 {
 pub unsafe extern "C" fn r8_uniform_01(mut seed: *mut i32) -> f64 {
     let mut k: i32 = 0;
     let mut r: f64 = 0.;
-    k = *seed / 127773 as i32;
-    *seed = 16807 as i32 * (*seed - k * 127773 as i32) - k * 2836 as i32;
-    if *seed < 0 as i32 {
-        *seed = *seed + 2147483647 as i32;
+    k = *seed / 127773;
+    *seed = 16807 * (*seed - k * 127773) - k * 2836;
+    if *seed < 0 {
+        *seed = *seed + 2147483647;
     }
     r = *seed as f64 * 4.656612875E-10f64;
     return r;
@@ -152,80 +146,64 @@ pub unsafe extern "C" fn rcont2(
     let mut nlm: i32 = 0;
     let mut nlmp: i32 = 0;
     let mut nrowtl: i32 = 0;
-    let mut ntotal: i32 = 0 as i32;
+    let mut ntotal: i32 = 0;
     let mut r: f64 = 0.;
     let mut sumprb: f64 = 0.;
     let mut x: f64 = 0.;
     let mut y: f64 = 0.;
-    *ierror = 0 as i32;
+    *ierror = 0;
     if *key == 0 {
-        *key = 1 as i32;
-        if nrow <= 1 as i32 {
+        *key = 1;
+        if nrow <= 1 {
             println!("");
             println!("RCONT - Fatal error!");
             println!("  Input number of rows is less than 2.");
-            *ierror = 1 as i32;
+            *ierror = 1;
             return;
         }
-        if ncol <= 1 as i32 {
+        if ncol <= 1 {
             println!("");
             println!("RCONT - Fatal error!");
             println!("  The number of columns is less than 2.");
-            *ierror = 2 as i32;
+            *ierror = 2;
             return;
         }
-        i = 0 as i32;
-        while i < nrow {
-            if *nrowt.offset(i as isize) <= 0 as i32 {
+        for i in 0..nrow {
+            if *nrowt.offset(i as isize) <= 0 {
                 println!("");
                 println!("RCONT - Fatal error!");
-                printf(
-                    b"  An entry in the row sum vector is not positive.\n\0" as *const u8
-                        as *const i8,
-                );
-                *ierror = 3 as i32;
+                println!("  An entry in the row sum vector is not positive.");
+                *ierror = 3;
                 return;
             }
-            i += 1;
         }
-        j = 0 as i32;
-        while j < ncol {
-            if *ncolt.offset(j as isize) <= 0 as i32 {
+        for j in 0..ncol {
+            if *ncolt.offset(j as isize) <= 0 {
                 println!("");
                 println!("RCONT - Fatal error!");
-                printf(
-                    b"  An entry in the column sum vector is not positive.\n\0" as *const u8
-                        as *const i8,
-                );
-                *ierror = 4 as i32;
+                println!("  An entry in the column sum vector is not positive.");
+                *ierror = 4;
                 return;
             }
-            j += 1;
         }
         if i4vec_sum(ncol, ncolt) != i4vec_sum(nrow, nrowt) {
             println!("");
             println!("RCONT - Fatal error!");
-            printf(
-                b"  The row and column sum vectors do not have the same sum.\n\0" as *const u8
-                    as *const i8,
-            );
-            *ierror = 6 as i32;
+            println!("  The row and column sum vectors do not have the same sum.");
+            *ierror = 6;
             return;
         }
         ntotal = i4vec_sum(ncol, ncolt);
         if !fact.is_null() {
             free(fact as *mut libc::c_void);
         }
-        fact =
-            malloc(((ntotal + 1 as i32) as u64).wrapping_mul(::core::mem::size_of::<f64>() as u64))
-                as *mut f64;
+        fact = malloc(((ntotal + 1) as u64).wrapping_mul(::core::mem::size_of::<f64>() as u64))
+            as *mut f64;
         x = 0.0f64;
-        *fact.offset(0 as i32 as isize) = 0.0f64;
-        i = 1 as i32;
-        while i <= ntotal {
-            x = x + log(i as f64);
+        *fact.offset(0 as isize) = 0.0f64;
+        for i in 1..=ntotal {
+            x = x + (i as f64).ln();
             *fact.offset(i as isize) = x;
-            i += 1;
         }
     }
     jwork = malloc((ncol as u64).wrapping_mul(::core::mem::size_of::<i32>() as u64)) as *mut i32;
@@ -244,66 +222,67 @@ pub unsafe extern "C" fn rcont2(
             ic = ic - id;
             ib = ie - ia;
             ii = ib - id;
-            if ie == 0 as i32 {
-                ia = 0 as i32;
+            if ie == 0 {
+                ia = 0;
                 for j in m..ncol {
-                    *matrix.offset((l + j * nrow) as isize) = 0 as i32;
+                    *matrix.offset((l + j * nrow) as isize) = 0;
                 }
                 break;
             } else {
                 r = r8_uniform_01(seed);
-                done1 = 0 as i32;
+                done1 = 0;
                 loop {
                     nlm = ((ia * id) as f64 / ie as f64 + 0.5f64) as i32;
-                    iap = ia + 1 as i32;
-                    idp = id + 1 as i32;
+                    iap = ia + 1;
+                    idp = id + 1;
                     igp = idp - nlm;
                     ihp = iap - nlm;
-                    nlmp = nlm + 1 as i32;
+                    nlmp = nlm + 1;
                     iip = ii + nlmp;
-                    x = exp(*fact.offset((iap - 1 as i32) as isize)
+                    x = (*fact.offset((iap - 1) as isize)
                         + *fact.offset(ib as isize)
                         + *fact.offset(ic as isize)
-                        + *fact.offset((idp - 1 as i32) as isize)
+                        + *fact.offset((idp - 1) as isize)
                         - *fact.offset(ie as isize)
-                        - *fact.offset((nlmp - 1 as i32) as isize)
-                        - *fact.offset((igp - 1 as i32) as isize)
-                        - *fact.offset((ihp - 1 as i32) as isize)
-                        - *fact.offset((iip - 1 as i32) as isize));
+                        - *fact.offset((nlmp - 1) as isize)
+                        - *fact.offset((igp - 1) as isize)
+                        - *fact.offset((ihp - 1) as isize)
+                        - *fact.offset((iip - 1) as isize))
+                    .exp();
                     if r <= x {
                         break;
                     }
                     sumprb = x;
                     y = x;
                     nll = nlm;
-                    lsp = 0 as i32;
-                    lsm = 0 as i32;
+                    lsp = 0;
+                    lsm = 0;
                     while lsp == 0 {
                         j = (id - nlm) * (ia - nlm);
-                        if j == 0 as i32 {
-                            lsp = 1 as i32;
+                        if j == 0 {
+                            lsp = 1;
                         } else {
-                            nlm = nlm + 1 as i32;
+                            nlm = nlm + 1;
                             x = x * j as f64 / (nlm * (ii + nlm)) as f64;
                             sumprb = sumprb + x;
                             if r <= sumprb {
-                                done1 = 1 as i32;
+                                done1 = 1;
                                 break;
                             }
                         }
-                        done2 = 0 as i32;
+                        done2 = 0;
                         while lsm == 0 {
                             j = nll * (ii + nll);
-                            if j == 0 as i32 {
-                                lsm = 1 as i32;
+                            if j == 0 {
+                                lsm = 1;
                                 break;
                             } else {
-                                nll = nll - 1 as i32;
+                                nll = nll - 1;
                                 y = y * j as f64 / ((id - nll) * (ia - nll)) as f64;
                                 sumprb = sumprb + y;
                                 if r <= sumprb {
                                     nlm = nll;
-                                    done2 = 1 as i32;
+                                    done2 = 1;
                                     break;
                                 } else if lsp == 0 {
                                     break;
@@ -328,12 +307,12 @@ pub unsafe extern "C" fn rcont2(
                 *jwork.offset(m as isize) = *jwork.offset(m as isize) - nlm;
             }
         }
-        *matrix.offset((l + (ncol - 1 as i32) * nrow) as isize) = ia;
+        *matrix.offset((l + (ncol - 1) * nrow) as isize) = ia;
     }
     for j in 0..(ncol - 1) {
-        *matrix.offset((nrow - 1 as i32 + j * nrow) as isize) = *jwork.offset(j as isize);
+        *matrix.offset((nrow - 1 + j * nrow) as isize) = *jwork.offset(j as isize);
     }
-    *matrix.offset((nrow - 1 as i32 + (ncol - 1 as i32) * nrow) as isize) =
-        ib - *matrix.offset((nrow - 1 as i32 + (ncol - 2 as i32) * nrow) as isize);
+    *matrix.offset((nrow - 1 + (ncol - 1) * nrow) as isize) =
+        ib - *matrix.offset((nrow - 1 + (ncol - 2) * nrow) as isize);
     free(jwork as *mut libc::c_void);
 }
