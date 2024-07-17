@@ -7,32 +7,28 @@
     unused_assignments,
     unused_mut
 )]
-extern "C" {
-    fn malloc(_: u64) -> *mut libc::c_void;
-    fn free(_: *mut libc::c_void);
-}
-#[no_mangle]
-pub unsafe extern "C" fn i4_max(i1: i32, i2: i32) -> i32 {
+
+fn i4_max(i1: i32, i2: i32) -> i32 {
     if i2 < i1 {
         i1
     } else {
         i2
     }
 }
-#[no_mangle]
-pub unsafe extern "C" fn i4_min(i1: i32, i2: i32) -> i32 {
+
+fn i4_min(i1: i32, i2: i32) -> i32 {
     if i1 < i2 {
         i1
     } else {
         i2
     }
 }
-#[no_mangle]
-pub unsafe extern "C" fn i4mat_print(mut m: i32, mut n: i32, mut a: *mut i32, mut title: &str) {
+
+unsafe fn i4mat_print(mut m: i32, mut n: i32, mut a: *mut i32, mut title: &str) {
     i4mat_print_some(m, n, a, 1, 1, m, n, title);
 }
-#[no_mangle]
-pub unsafe extern "C" fn i4mat_print_some(
+
+unsafe fn i4mat_print_some(
     mut m: i32,
     mut n: i32,
     mut a: *mut i32,
@@ -78,8 +74,8 @@ pub unsafe extern "C" fn i4mat_print_some(
         }
     }
 }
-#[no_mangle]
-pub unsafe extern "C" fn i4vec_print(mut n: i32, mut a: *mut i32, mut title: &str) {
+
+unsafe fn i4vec_print(mut n: i32, mut a: *mut i32, mut title: &str) {
     let mut i: i32 = 0;
     println!("");
     println!("{}", title);
@@ -88,8 +84,8 @@ pub unsafe extern "C" fn i4vec_print(mut n: i32, mut a: *mut i32, mut title: &st
         println!("  {:>6}: {:>8}", i, *a.offset(i as isize),);
     }
 }
-#[no_mangle]
-pub unsafe extern "C" fn i4vec_sum(mut n: i32, mut a: *mut i32) -> i32 {
+
+unsafe fn i4vec_sum(mut n: i32, mut a: *mut i32) -> i32 {
     let mut sum: i32 = 0;
     sum = 0;
     for i in 0..n {
@@ -97,8 +93,8 @@ pub unsafe extern "C" fn i4vec_sum(mut n: i32, mut a: *mut i32) -> i32 {
     }
     return sum;
 }
-#[no_mangle]
-pub unsafe extern "C" fn r8_uniform_01(mut seed: *mut i32) -> f64 {
+
+unsafe fn r8_uniform_01(mut seed: *mut i32) -> f64 {
     let mut k: i32 = 0;
     let mut r: f64 = 0.;
     k = *seed / 127773;
@@ -109,20 +105,20 @@ pub unsafe extern "C" fn r8_uniform_01(mut seed: *mut i32) -> f64 {
     r = *seed as f64 * 4.656612875E-10f64;
     return r;
 }
-#[no_mangle]
-pub unsafe extern "C" fn rcont2(
+
+pub unsafe fn rcont2(
     mut nrow: i32,
     mut ncol: i32,
     mut nrowt: *mut i32,
     mut ncolt: *mut i32,
     mut key: *mut i32,
     mut seed: *mut i32,
+    mut fact: &Vec<f64>,
     mut matrix: *mut i32,
     mut ierror: *mut i32,
 ) {
     let mut done1: i32 = 0;
     let mut done2: i32 = 0;
-    let mut fact: *mut f64 = 0 as *const f64 as *mut f64;
     let mut i: i32 = 0;
     let mut ia: i32 = 0;
     let mut iap: i32 = 0;
@@ -137,7 +133,7 @@ pub unsafe extern "C" fn rcont2(
     let mut iip: i32 = 0;
     let mut j: i32 = 0;
     let mut jc: i32 = 0;
-    let mut jwork: *mut i32 = 0 as *mut i32;
+    let mut jwork: Vec<i32>;
     let mut l: i32 = 0;
     let mut lsm: i32 = 0;
     let mut lsp: i32 = 0;
@@ -194,21 +190,10 @@ pub unsafe extern "C" fn rcont2(
             return;
         }
         ntotal = i4vec_sum(ncol, ncolt);
-        if !fact.is_null() {
-            free(fact as *mut libc::c_void);
-        }
-        fact = malloc(((ntotal + 1) as u64).wrapping_mul(::core::mem::size_of::<f64>() as u64))
-            as *mut f64;
-        x = 0.0f64;
-        *fact.offset(0 as isize) = 0.0f64;
-        for i in 1..=ntotal {
-            x = x + (i as f64).ln();
-            *fact.offset(i as isize) = x;
-        }
     }
-    jwork = malloc((ncol as u64).wrapping_mul(::core::mem::size_of::<i32>() as u64)) as *mut i32;
+    jwork = vec![0i32; ncol as usize];
     for i in 0..(ncol - 1) {
-        *jwork.offset(i as isize) = *ncolt.offset(i as isize);
+        jwork[i as usize] = *ncolt.offset(i as isize);
     }
     jc = ntotal;
     for l in 0..(nrow - 1) {
@@ -217,7 +202,7 @@ pub unsafe extern "C" fn rcont2(
         ic = jc;
         jc = jc - nrowtl;
         for m in 0..(ncol - 1) {
-            id = *jwork.offset(m as isize);
+            id = jwork[m as usize];
             ie = ic;
             ic = ic - id;
             ib = ie - ia;
@@ -239,16 +224,16 @@ pub unsafe extern "C" fn rcont2(
                     ihp = iap - nlm;
                     nlmp = nlm + 1;
                     iip = ii + nlmp;
-                    x = (*fact.offset((iap - 1) as isize)
-                        + *fact.offset(ib as isize)
-                        + *fact.offset(ic as isize)
-                        + *fact.offset((idp - 1) as isize)
-                        - *fact.offset(ie as isize)
-                        - *fact.offset((nlmp - 1) as isize)
-                        - *fact.offset((igp - 1) as isize)
-                        - *fact.offset((ihp - 1) as isize)
-                        - *fact.offset((iip - 1) as isize))
-                    .exp();
+                    x = (fact[(iap - 1) as usize]
+                        + fact[ib as usize]
+                        + fact[ic as usize]
+                        + fact[(idp - 1) as usize]
+                        - fact[ie as usize]
+                        - fact[(nlmp - 1) as usize]
+                        - fact[(igp - 1) as usize]
+                        - fact[(ihp - 1) as usize]
+                        - fact[(iip - 1) as usize])
+                        .exp();
                     if r <= x {
                         break;
                     }
@@ -304,15 +289,14 @@ pub unsafe extern "C" fn rcont2(
                 }
                 *matrix.offset((l + m * nrow) as isize) = nlm;
                 ia = ia - nlm;
-                *jwork.offset(m as isize) = *jwork.offset(m as isize) - nlm;
+                jwork[m as usize] = jwork[m as usize] - nlm;
             }
         }
         *matrix.offset((l + (ncol - 1) * nrow) as isize) = ia;
     }
     for j in 0..(ncol - 1) {
-        *matrix.offset((nrow - 1 + j * nrow) as isize) = *jwork.offset(j as isize);
+        *matrix.offset((nrow - 1 + j * nrow) as isize) = jwork[j as usize];
     }
     *matrix.offset((nrow - 1 + (ncol - 1) * nrow) as isize) =
         ib - *matrix.offset((nrow - 1 + (ncol - 2) * nrow) as isize);
-    free(jwork as *mut libc::c_void);
 }

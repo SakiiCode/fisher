@@ -180,7 +180,7 @@ pub fn sim(table: Vec<Vec<u32>>, iterations: u32) -> PyResult<f64> {
 
     unsafe {
         for _ in 0..iterations {
-            let table = generate(&mut row_sum_i, &mut col_sum_i, rng.gen::<i32>());
+            let table = generate(&mut row_sum_i, &mut col_sum_i, &fact);
             // STATISTIC <- -sum(lfactorial(x))
             let ans = find_statistic_c(&table, nrow, ncol, &fact);
 
@@ -275,7 +275,7 @@ fn find_statistic_r(table: &Vec<Vec<u32>>, fact: &Vec<f64>) -> f64 {
     return ans;
 }
 
-unsafe fn generate(row_sum: &mut Vec<i32>, col_sum: &mut Vec<i32>, seed: i32) -> Vec<i32> {
+unsafe fn generate(row_sum: &mut Vec<i32>, col_sum: &mut Vec<i32>, fact: &Vec<f64>) -> Vec<i32> {
     let mut seed = [seed];
     let mut key = [0];
     let size = row_sum.len() * col_sum.len();
@@ -288,6 +288,7 @@ unsafe fn generate(row_sum: &mut Vec<i32>, col_sum: &mut Vec<i32>, seed: i32) ->
         col_sum.as_mut_ptr(),
         key.as_mut_ptr(),
         seed.as_mut_ptr(),
+        &fact,
         matrix.as_mut_ptr(),
         ierror.as_mut_ptr(),
     );
