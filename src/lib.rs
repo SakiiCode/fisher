@@ -1,6 +1,7 @@
 use math::Quotient;
 use pyo3::prelude::*;
 use rand::Rng;
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::{cmp::min, vec};
 
 mod asa159;
@@ -175,17 +176,14 @@ pub fn sim(table: Vec<Vec<u32>>, iterations: u32) -> PyResult<f64> {
     let nrow = row_sum.len();
     let ncol = col_sum.len();
     let statistic = find_statistic_r(&table, &fact);
-    let mut sum = 0.0;
 
-    for _ in 0..iterations {
-        let table = generate(&row_sum_i, &col_sum_i, &fact);
-        // STATISTIC <- -sum(lfactorial(x))
-        let ans = find_statistic_c(&table, nrow, ncol, &fact);
-
-        if ans <= statistic + 0.00000001 {
-            sum += 1.0;
-        }
-    }
+    // STATISTIC <- -sum(lfactorial(x))
+    let sum = (0..iterations)
+        .into_par_iter()
+        .map(|_| generate(&row_sum_i, &col_sum_i, &fact))
+        .map(|table| find_statistic_c(&table, nrow, ncol, &fact))
+        .filter(|ans| *ans <= statistic + 0.00000001)
+        .count() as f64;
 
     // PVAL <- (1 + sum(tmp <= STATISTIC/almost.1)) / (B + 1)
     let pvalue = (1.0 + sum) / (iterations as f64 + 1.0);
