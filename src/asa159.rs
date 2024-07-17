@@ -24,14 +24,14 @@ fn i4_min(i1: i32, i2: i32) -> i32 {
     }
 }
 
-unsafe fn i4mat_print(mut m: i32, mut n: i32, mut a: *mut i32, mut title: &str) {
+fn i4mat_print(mut m: i32, mut n: i32, a: &Vec<i32>, mut title: &str) {
     i4mat_print_some(m, n, a, 1, 1, m, n, title);
 }
 
-unsafe fn i4mat_print_some(
+fn i4mat_print_some(
     mut m: i32,
     mut n: i32,
-    mut a: *mut i32,
+    mut a: &Vec<i32>,
     mut ilo: i32,
     mut jlo: i32,
     mut ihi: i32,
@@ -68,33 +68,33 @@ unsafe fn i4mat_print_some(
         for i in i2lo..=i2hi {
             print!("{:>5}:", i - 1);
             for j in j2lo..=j2hi {
-                print!("  {:>6}", *a.offset((i - 1 + (j - 1) * m) as isize),);
+                print!("  {:>6}", a[(i - 1 + (j - 1) * m) as usize],);
             }
             println!("");
         }
     }
 }
 
-unsafe fn i4vec_print(mut n: i32, mut a: *mut i32, mut title: &str) {
+fn i4vec_print(mut n: i32, a: &Vec<i32>, mut title: &str) {
     let mut i: i32 = 0;
     println!("");
     println!("{}", title);
     println!("");
     for i in 0..n {
-        println!("  {:>6}: {:>8}", i, *a.offset(i as isize),);
+        println!("  {:>6}: {:>8}", i, a[i as usize],);
     }
 }
 
-unsafe fn i4vec_sum(mut n: i32, mut a: *mut i32) -> i32 {
+fn i4vec_sum(mut n: i32, a: &Vec<i32>) -> i32 {
     let mut sum: i32 = 0;
     sum = 0;
     for i in 0..n {
-        sum = sum + *a.offset(i as isize);
+        sum = sum + a[i as usize];
     }
     return sum;
 }
 
-unsafe fn r8_uniform_01(mut seed: *mut i32) -> f64 {
+fn r8_uniform_01(seed: &mut i32) -> f64 {
     let mut k: i32 = 0;
     let mut r: f64 = 0.;
     k = *seed / 127773;
@@ -106,16 +106,16 @@ unsafe fn r8_uniform_01(mut seed: *mut i32) -> f64 {
     return r;
 }
 
-pub unsafe fn rcont2(
+pub fn rcont2(
     mut nrow: i32,
     mut ncol: i32,
-    mut nrowt: *mut i32,
-    mut ncolt: *mut i32,
-    mut key: *mut i32,
-    mut seed: *mut i32,
+    mut nrowt: &Vec<i32>,
+    mut ncolt: &Vec<i32>,
+    mut key: &mut i32,
+    mut seed: &mut i32,
     mut fact: &Vec<f64>,
-    mut matrix: *mut i32,
-    mut ierror: *mut i32,
+    mut matrix: &mut Vec<i32>,
+    mut ierror: &mut i32,
 ) {
     let mut done1: i32 = 0;
     let mut done2: i32 = 0;
@@ -165,7 +165,7 @@ pub unsafe fn rcont2(
             return;
         }
         for i in 0..nrow {
-            if *nrowt.offset(i as isize) <= 0 {
+            if nrowt[i as usize] <= 0 {
                 println!("");
                 println!("RCONT - Fatal error!");
                 println!("  An entry in the row sum vector is not positive.");
@@ -174,7 +174,7 @@ pub unsafe fn rcont2(
             }
         }
         for j in 0..ncol {
-            if *ncolt.offset(j as isize) <= 0 {
+            if ncolt[j as usize] <= 0 {
                 println!("");
                 println!("RCONT - Fatal error!");
                 println!("  An entry in the column sum vector is not positive.");
@@ -193,11 +193,11 @@ pub unsafe fn rcont2(
     }
     jwork = vec![0i32; ncol as usize];
     for i in 0..(ncol - 1) {
-        jwork[i as usize] = *ncolt.offset(i as isize);
+        jwork[i as usize] = ncolt[i as usize];
     }
     jc = ntotal;
     for l in 0..(nrow - 1) {
-        nrowtl = *nrowt.offset(l as isize);
+        nrowtl = nrowt[l as usize];
         ia = nrowtl;
         ic = jc;
         jc = jc - nrowtl;
@@ -210,7 +210,7 @@ pub unsafe fn rcont2(
             if ie == 0 {
                 ia = 0;
                 for j in m..ncol {
-                    *matrix.offset((l + j * nrow) as isize) = 0;
+                    matrix[(l + j * nrow) as usize] = 0;
                 }
                 break;
             } else {
@@ -287,16 +287,16 @@ pub unsafe fn rcont2(
                     r = r8_uniform_01(seed);
                     r = sumprb * r;
                 }
-                *matrix.offset((l + m * nrow) as isize) = nlm;
+                matrix[(l + m * nrow) as usize] = nlm;
                 ia = ia - nlm;
                 jwork[m as usize] = jwork[m as usize] - nlm;
             }
         }
-        *matrix.offset((l + (ncol - 1) * nrow) as isize) = ia;
+        matrix[(l + (ncol - 1) * nrow) as usize] = ia;
     }
     for j in 0..(ncol - 1) {
-        *matrix.offset((nrow - 1 + j * nrow) as isize) = jwork[j as usize];
+        matrix[(nrow - 1 + j * nrow) as usize] = jwork[j as usize];
     }
-    *matrix.offset((nrow - 1 + (ncol - 1) * nrow) as isize) =
-        ib - *matrix.offset((nrow - 1 + (ncol - 2) * nrow) as isize);
+    matrix[(nrow - 1 + (ncol - 1) * nrow) as usize] =
+        ib - matrix[(nrow - 1 + (ncol - 2) * nrow) as usize];
 }
