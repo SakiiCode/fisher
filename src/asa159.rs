@@ -15,24 +15,20 @@ extern "C" {
     fn log(_: libc::c_double) -> libc::c_double;
 }
 #[no_mangle]
-pub unsafe extern "C" fn i4_max(mut i1: libc::c_int, mut i2: libc::c_int) -> libc::c_int {
-    let mut value: libc::c_int = 0;
+pub unsafe extern "C" fn i4_max(i1: libc::c_int, i2: libc::c_int) -> libc::c_int {
     if i2 < i1 {
-        value = i1;
+        i1
     } else {
-        value = i2;
+        i2
     }
-    return value;
 }
 #[no_mangle]
-pub unsafe extern "C" fn i4_min(mut i1: libc::c_int, mut i2: libc::c_int) -> libc::c_int {
-    let mut value: libc::c_int = 0;
+pub unsafe extern "C" fn i4_min(i1: libc::c_int, i2: libc::c_int) -> libc::c_int {
     if i1 < i2 {
-        value = i1;
+        i1
     } else {
-        value = i2;
+        i2
     }
-    return value;
 }
 #[no_mangle]
 pub unsafe extern "C" fn i4mat_print(
@@ -67,44 +63,36 @@ pub unsafe extern "C" fn i4mat_print_some(
         printf(b"  (None)\n\0" as *const u8 as *const libc::c_char);
         return;
     }
-    j2lo = jlo;
-    while j2lo <= jhi {
+    for j2lo in (jlo..=jhi).step_by(10) {
         j2hi = j2lo + 10 as libc::c_int - 1 as libc::c_int;
         j2hi = i4_min(j2hi, n);
         j2hi = i4_min(j2hi, jhi);
         printf(b"\n\0" as *const u8 as *const libc::c_char);
         printf(b"  Col:\0" as *const u8 as *const libc::c_char);
-        j = j2lo;
-        while j <= j2hi {
+        for j in j2lo..=j2hi {
             printf(
                 b"  %6d\0" as *const u8 as *const libc::c_char,
                 j - 1 as libc::c_int,
             );
-            j += 1;
         }
         printf(b"\n\0" as *const u8 as *const libc::c_char);
         printf(b"  Row\n\0" as *const u8 as *const libc::c_char);
         printf(b"\n\0" as *const u8 as *const libc::c_char);
         i2lo = i4_max(ilo, 1 as libc::c_int);
         i2hi = i4_min(ihi, m);
-        i = i2lo;
-        while i <= i2hi {
+        for i in i2lo..=i2hi {
             printf(
                 b"%5d:\0" as *const u8 as *const libc::c_char,
                 i - 1 as libc::c_int,
             );
-            j = j2lo;
-            while j <= j2hi {
+            for j in j2lo..=j2hi {
                 printf(
                     b"  %6d\0" as *const u8 as *const libc::c_char,
                     *a.offset((i - 1 as libc::c_int + (j - 1 as libc::c_int) * m) as isize),
                 );
-                j += 1;
             }
             printf(b"\n\0" as *const u8 as *const libc::c_char);
-            i += 1;
         }
-        j2lo = j2lo + 10 as libc::c_int;
     }
 }
 #[no_mangle]
@@ -117,25 +105,20 @@ pub unsafe extern "C" fn i4vec_print(
     printf(b"\n\0" as *const u8 as *const libc::c_char);
     printf(b"%s\n\0" as *const u8 as *const libc::c_char, title);
     printf(b"\n\0" as *const u8 as *const libc::c_char);
-    i = 0 as libc::c_int;
-    while i < n {
+    for i in 0..n {
         printf(
             b"  %6d: %8d\n\0" as *const u8 as *const libc::c_char,
             i,
             *a.offset(i as isize),
         );
-        i += 1;
     }
 }
 #[no_mangle]
 pub unsafe extern "C" fn i4vec_sum(mut n: libc::c_int, mut a: *mut libc::c_int) -> libc::c_int {
-    let mut i: libc::c_int = 0;
     let mut sum: libc::c_int = 0;
     sum = 0 as libc::c_int;
-    i = 0 as libc::c_int;
-    while i < n {
+    for i in 0..n {
         sum = sum + *a.offset(i as isize);
-        i += 1;
     }
     return sum;
 }
@@ -273,20 +256,16 @@ pub unsafe extern "C" fn rcont2(
         (ncol as libc::c_ulong)
             .wrapping_mul(::core::mem::size_of::<libc::c_int>() as libc::c_ulong),
     ) as *mut libc::c_int;
-    i = 0 as libc::c_int;
-    while i < ncol - 1 as libc::c_int {
+    for i in 0..(ncol - 1) {
         *jwork.offset(i as isize) = *ncolt.offset(i as isize);
-        i += 1;
     }
     jc = ntotal;
-    l = 0 as libc::c_int;
-    while l < nrow - 1 as libc::c_int {
+    for l in 0..(nrow - 1) {
         nrowtl = *nrowt.offset(l as isize);
         ia = nrowtl;
         ic = jc;
         jc = jc - nrowtl;
-        m = 0 as libc::c_int;
-        while m < ncol - 1 as libc::c_int {
+        for m in 0..(ncol - 1) {
             id = *jwork.offset(m as isize);
             ie = ic;
             ic = ic - id;
@@ -294,10 +273,8 @@ pub unsafe extern "C" fn rcont2(
             ii = ib - id;
             if ie == 0 as libc::c_int {
                 ia = 0 as libc::c_int;
-                j = m;
-                while j < ncol {
+                for j in m..ncol {
                     *matrix.offset((l + j * nrow) as isize) = 0 as libc::c_int;
-                    j += 1;
                 }
                 break;
             } else {
@@ -378,16 +355,12 @@ pub unsafe extern "C" fn rcont2(
                 *matrix.offset((l + m * nrow) as isize) = nlm;
                 ia = ia - nlm;
                 *jwork.offset(m as isize) = *jwork.offset(m as isize) - nlm;
-                m += 1;
             }
         }
         *matrix.offset((l + (ncol - 1 as libc::c_int) * nrow) as isize) = ia;
-        l += 1;
     }
-    j = 0 as libc::c_int;
-    while j < ncol - 1 as libc::c_int {
+    for j in 0..(ncol - 1) {
         *matrix.offset((nrow - 1 as libc::c_int + j * nrow) as isize) = *jwork.offset(j as isize);
-        j += 1;
     }
     *matrix.offset((nrow - 1 as libc::c_int + (ncol - 1 as libc::c_int) * nrow) as isize) =
         ib - *matrix.offset((nrow - 1 as libc::c_int + (ncol - 2 as libc::c_int) * nrow) as isize);
