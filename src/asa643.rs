@@ -15,5 +15,6 @@ extern "C" {
         emin: *mut doublereal,
         prt: *mut doublereal,
         pre: *mut doublereal,
+        ws: *mut integer,
     ) -> c_int;
 }

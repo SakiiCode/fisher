@@ -1,4 +1,12 @@
-#include "f2c.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <setjmp.h>
+#include <math.h>
+
+typedef signed int integer;
+typedef double doublereal;
+typedef signed int logical;
+typedef float real;
 
 static integer c__3 = 3;
 static integer c__1 = 1;
@@ -8,16 +16,17 @@ static integer c__4 = 4;
 static integer c__6 = 6;
 static integer c__30 = 30;
 static integer c__7 = 7;
-static integer c__9 = 9;
 static integer c__40 = 40;
 static integer c__20 = 20;
 
-int prterr_(integer *icode, char *mes, ftnlen mes_len)
+jmp_buf err_buf;
+
+int prterr_(integer *icode, char *mes)
 {
 
-    integer s_wsle(cilist *), do_lio(integer *, integer *, char *, ftnlen),
+    /*integer s_wsle(cilist *), do_lio(integer *, integer *, char *, ftnlen),
         e_wsle(void);
-    int s_stop(char *, ftnlen);
+    extern int s_stop(char *, ftnlen);
 
     cilist io___187 = {0, 6, 0, 0, 0};
 
@@ -27,8 +36,9 @@ int prterr_(integer *icode, char *mes, ftnlen mes_len)
     do_lio(&c__9, &c__1, " ", (ftnlen)1);
     do_lio(&c__9, &c__1, mes, mes_len);
     e_wsle();
-    s_stop("", (ftnlen)0);
-    return 0;
+    s_stop("", (ftnlen)0);*/
+    printf("FEXACT ERROR: %d\n%s\n", *icode, mes);
+    longjmp(err_buf, *icode);
 }
 
 integer iwork_(integer *iwkmax, integer *iwkpt, integer *number, integer *itype)
@@ -52,7 +62,7 @@ integer iwork_(integer *iwkmax, integer *iwkpt, integer *number, integer *itype)
     }
     if (*iwkpt > *iwkmax + 1)
     {
-        prterr_(&c__40, "Out of workspace.", (ftnlen)17);
+        prterr_(&c__40, "Out of workspace.");
     }
     return ret_val;
 }
@@ -125,7 +135,7 @@ L30:
     }
     else
     {
-        prterr_(&c__20, "This should never occur.", (ftnlen)24);
+        prterr_(&c__20, "This should never occur.");
     }
 
 L40:
@@ -603,8 +613,7 @@ int f5xact_(doublereal *pastp, doublereal *tol, integer *kval, integer *key, int
 
         prterr_(&c__6, "LDKEY is too small for this problem.  It is not poss"
                        "ible to estimate the value of LDKEY required, but twice the "
-                       "current value may be sufficient.",
-                (ftnlen)144);
+                       "current value may be sufficient.");
 
     L30:
         key[itp] = *kval;
@@ -615,8 +624,7 @@ int f5xact_(doublereal *pastp, doublereal *tol, integer *kval, integer *key, int
         {
             prterr_(&c__7, "LDSTP is too small for this problem.  It is not "
                            "possible to estimate the value of LDSTP required, but tw"
-                           "ice the current value may be sufficient.",
-                    (ftnlen)144);
+                           "ice the current value may be sufficient.");
         }
 
         npoin[*itop] = -1;
@@ -660,8 +668,7 @@ L50:
     {
         prterr_(&c__7, "LDSTP is too small for this problem.  It is not poss"
                        "ible to estimate the value of LDSTP rerquired, but twice the"
-                       " current value may be sufficient.",
-                (ftnlen)145);
+                       " current value may be sufficient.");
         goto L9000;
     }
 
@@ -1330,8 +1337,7 @@ L120:
         }
 
         prterr_(&c__30, "Stack length exceeded in f3xact.  This problem shou"
-                        "ld not occur.",
-                (ftnlen)64);
+                        "ld not occur.");
 
     L180:
         ist[ii] = key;
@@ -1427,7 +1433,6 @@ int f2xact_(integer *nrow, integer *ncol, doublereal *table,
     integer table_dim1, table_offset, i__1, i__2;
     doublereal d__1, d__2, d__3, d__4;
 
-    integer i_dnnt(doublereal *);
     double log(doublereal), exp(doublereal);
 
     integer i__, j, k, n, k1;
@@ -1560,11 +1565,11 @@ int f2xact_(integer *nrow, integer *ncol, doublereal *table,
 
     if (*nrow > *ldtabl)
     {
-        prterr_(&c__1, "NROW must be less than or equal to LDTABL.", (ftnlen)42);
+        prterr_(&c__1, "NROW must be less than or equal to LDTABL.");
     }
     if (*ncol <= 1)
     {
-        prterr_(&c__4, "NCOL must be greater than 1.0.", (ftnlen)30);
+        prterr_(&c__4, "NCOL must be greater than 1.0.");
     }
 
     ntot = 0;
@@ -1577,18 +1582,17 @@ int f2xact_(integer *nrow, integer *ncol, doublereal *table,
         {
             if (table[i__ + j * table_dim1] < -1e-4)
             {
-                prterr_(&c__2, "All elements of TABLE must be positive.", (ftnlen)39);
+                prterr_(&c__2, "All elements of TABLE must be positive.");
             }
-            iro[i__] += i_dnnt(&table[i__ + j * table_dim1]);
-            ntot += i_dnnt(&table[i__ + j * table_dim1]);
+            iro[i__] += round(table[i__ + j * table_dim1]);
+            ntot += round(table[i__ + j * table_dim1]);
         }
     }
 
     if (ntot == 0)
     {
         prterr_(&c__3, "All elements of TABLE are zero.  PRT and PRE are set"
-                       " to missing values (NaN, not a number).",
-                (ftnlen)91);
+                       " to missing values (NaN, not a number).");
         *prt = amiss;
         *pre = amiss;
         goto L9000;
@@ -1601,7 +1605,7 @@ int f2xact_(integer *nrow, integer *ncol, doublereal *table,
         i__2 = *nrow;
         for (j = 1; j <= i__2; ++j)
         {
-            ico[i__] += i_dnnt(&table[j + i__ * table_dim1]);
+            ico[i__] += round(table[j + i__ * table_dim1]);
         }
     }
 
@@ -1644,8 +1648,7 @@ int f2xact_(integer *nrow, integer *ncol, doublereal *table,
         {
             prterr_(&c__5, "The hash table key cannot be computed because th"
                            "e largest key is larger than the largest representable i"
-                           "nteger.  The algorithm cannot proceed.",
-                    (ftnlen)142);
+                           "nteger.  The algorithm cannot proceed.");
         }
     }
 
@@ -1657,8 +1660,7 @@ int f2xact_(integer *nrow, integer *ncol, doublereal *table,
     {
         prterr_(&c__5, "The hash table key cannot be computed because the la"
                        "rgest key is larger than the largest representable integer. "
-                       " The algorithm cannot proceed.",
-                (ftnlen)142);
+                       " The algorithm cannot proceed.");
         goto L9000;
     }
 
@@ -1687,13 +1689,13 @@ int f2xact_(integer *nrow, integer *ncol, doublereal *table,
         {
             if (*nrow <= *ncol)
             {
-                dd += fact[i_dnnt(&table[i__ + j * table_dim1])];
-                ntot += i_dnnt(&table[i__ + j * table_dim1]);
+                dd += fact[(int)round(table[i__ + j * table_dim1])];
+                ntot += round(table[i__ + j * table_dim1]);
             }
             else
             {
-                dd += fact[i_dnnt(&table[j + i__ * table_dim1])];
-                ntot += i_dnnt(&table[j + i__ * table_dim1]);
+                dd += fact[(int)round(table[j + i__ * table_dim1])];
+                ntot += round(table[j + i__ * table_dim1]);
             }
         }
         obs = obs + fact[ico[j]] - dd;
@@ -1926,8 +1928,7 @@ L150:
 
         prterr_(&c__6, "LDKEY is too small.  It is not possible to give thev"
                        "alue of LDKEY required, but you could try doubling LDKEY (an"
-                       "d possibly LDSTP).",
-                (ftnlen)130);
+                       "d possibly LDSTP).");
     }
 
 L240:
@@ -2185,11 +2186,11 @@ L9000:
 }
 
 int fexact_(integer *nrow, integer *ncol, doublereal *table,
-            integer *ldtabl, doublereal *expect, doublereal *percnt, doublereal *emin, doublereal *prt, doublereal *pre)
+            integer *ldtabl, doublereal *expect, doublereal *percnt, doublereal *emin, doublereal *prt, doublereal *pre, integer *ws)
 {
 
     integer table_dim1, table_offset, i__1, i__2, i__3;
-    doublereal equiv_1[100000];
+    doublereal *equiv_1 = malloc(*ws / 2 * sizeof(doublereal));
 
     integer i__, j, k, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, kk,
         i3a, i3b, i3c, i9a, nco, nro, numb, iiwk;
@@ -2208,7 +2209,7 @@ int fexact_(integer *nrow, integer *ncol, doublereal *table,
     table_offset = 1 + table_dim1;
     table -= table_offset;
 
-    iwkmax = 200000;
+    iwkmax = *ws;
 
     mult = 30;
 
@@ -2218,9 +2219,16 @@ int fexact_(integer *nrow, integer *ncol, doublereal *table,
 
     iwkpt = 1;
 
+    int errorcode = setjmp(err_buf);
+    if (errorcode != 0)
+    {
+        free(equiv_1);
+        return -errorcode;
+    }
+
     if (*nrow > *ldtabl)
     {
-        prterr_(&c__1, "NROW must be less than or equal to LDTABL.", (ftnlen)42);
+        prterr_(&c__1, "NROW must be less than or equal to LDTABL.");
     }
     ntot = 0;
     i__1 = *nrow;
@@ -2231,7 +2239,7 @@ int fexact_(integer *nrow, integer *ncol, doublereal *table,
         {
             if (table[i__ + j * table_dim1] < 0.)
             {
-                prterr_(&c__2, "All elements of TABLE must be positive.", (ftnlen)39);
+                prterr_(&c__2, "All elements of TABLE must be positive.");
             }
             ntot = (integer)(ntot + table[i__ + j * table_dim1]);
         }
@@ -2239,8 +2247,7 @@ int fexact_(integer *nrow, integer *ncol, doublereal *table,
     if (ntot == 0)
     {
         prterr_(&c__3, "All elements of TABLE are zero.  PRT and PRE are set"
-                       " to missing values (NaN, not a number).",
-                (ftnlen)91);
+                       " to missing values (NaN, not a number).");
         *prt = amiss;
         *pre = amiss;
         goto L9000;
@@ -2435,5 +2442,6 @@ int fexact_(integer *nrow, integer *ncol, doublereal *table,
             &(equiv_1)[i9 - 1], &(equiv_1)[i9a - 1], &((integer *)equiv_1)[i10 - 1], &((integer *)equiv_1)[iiwk - 1], &(equiv_1)[irwk - 1]);
 
 L9000:
+    free(equiv_1);
     return 0;
 }
