@@ -1,13 +1,4 @@
-#![allow(
-    dead_code,
-    mutable_transmutes,
-    non_camel_case_types,
-    non_snake_case,
-    non_upper_case_globals,
-    unused_assignments,
-    unused_mut
-)]
-
+/*
 fn i4_max(i1: i32, i2: i32) -> i32 {
     if i2 < i1 {
         i1
@@ -38,12 +29,9 @@ fn i4mat_print_some(
     mut jhi: i32,
     mut title: &str,
 ) {
-    let mut i: i32 = 0;
     let mut i2hi: i32 = 0;
     let mut i2lo: i32 = 0;
-    let mut j: i32 = 0;
     let mut j2hi: i32 = 0;
-    let mut j2lo: i32 = 0;
     println!("");
     println!("{}", title);
     if m <= 0 || n <= 0 {
@@ -76,27 +64,21 @@ fn i4mat_print_some(
 }
 
 fn i4vec_print(mut n: i32, a: &Vec<i32>, mut title: &str) {
-    let mut i: i32 = 0;
     println!("");
     println!("{}", title);
     println!("");
     for i in 0..n {
         println!("  {:>6}: {:>8}", i, a[i as usize],);
     }
-}
+}*/
 
-fn i4vec_sum(mut n: i32, a: &Vec<i32>) -> i32 {
-    let mut sum: i32 = 0;
-    sum = 0;
-    for i in 0..n {
-        sum = sum + a[i as usize];
-    }
-    return sum;
+fn i4vec_sum(a: &Vec<i32>) -> i32 {
+    a.iter().sum()
 }
 
 fn r8_uniform_01(seed: &mut i32) -> f64 {
-    let mut k: i32 = 0;
-    let mut r: f64 = 0.;
+    let k;
+    let r;
     k = *seed / 127773;
     *seed = 16807 * (*seed - k * 127773) - k * 2836;
     if *seed < 0 {
@@ -107,46 +89,43 @@ fn r8_uniform_01(seed: &mut i32) -> f64 {
 }
 
 pub fn rcont2(
-    mut nrow: i32,
-    mut ncol: i32,
-    mut nrowt: &Vec<i32>,
-    mut ncolt: &Vec<i32>,
-    mut key: &mut i32,
-    mut seed: &mut i32,
-    mut fact: &Vec<f64>,
-    mut matrix: &mut Vec<i32>,
-    mut ierror: &mut i32,
+    nrow: i32,
+    ncol: i32,
+    nrowt: &Vec<i32>,
+    ncolt: &Vec<i32>,
+    key: &mut i32,
+    seed: &mut i32,
+    fact: &Vec<f64>,
+    matrix: &mut Vec<i32>,
+    ierror: &mut i32,
 ) {
-    let mut done1: i32 = 0;
+    let mut done1: i32;
     let mut done2: i32 = 0;
-    let mut i: i32 = 0;
-    let mut ia: i32 = 0;
-    let mut iap: i32 = 0;
+    let mut ia: i32;
+    let mut iap: i32;
     let mut ib: i32 = 0;
-    let mut ic: i32 = 0;
-    let mut id: i32 = 0;
-    let mut idp: i32 = 0;
-    let mut ie: i32 = 0;
-    let mut igp: i32 = 0;
-    let mut ihp: i32 = 0;
-    let mut ii: i32 = 0;
-    let mut iip: i32 = 0;
-    let mut j: i32 = 0;
-    let mut jc: i32 = 0;
+    let mut ic: i32;
+    let mut id: i32;
+    let mut idp: i32;
+    let mut ie: i32;
+    let mut igp: i32;
+    let mut ihp: i32;
+    let mut ii: i32;
+    let mut iip: i32;
+    let mut j: i32;
+    let mut jc: i32;
     let mut jwork: Vec<i32>;
-    let mut l: i32 = 0;
-    let mut lsm: i32 = 0;
-    let mut lsp: i32 = 0;
-    let mut m: i32 = 0;
-    let mut nll: i32 = 0;
-    let mut nlm: i32 = 0;
-    let mut nlmp: i32 = 0;
-    let mut nrowtl: i32 = 0;
+    let mut lsm: i32;
+    let mut lsp: i32;
+    let mut nll: i32;
+    let mut nlm: i32;
+    let mut nlmp: i32;
+    let mut nrowtl: i32;
     let mut ntotal: i32 = 0;
-    let mut r: f64 = 0.;
-    let mut sumprb: f64 = 0.;
-    let mut x: f64 = 0.;
-    let mut y: f64 = 0.;
+    let mut r: f64;
+    let mut sumprb: f64;
+    let mut x: f64;
+    let mut y: f64;
     *ierror = 0;
     if *key == 0 {
         *key = 1;
@@ -182,14 +161,14 @@ pub fn rcont2(
                 return;
             }
         }
-        if i4vec_sum(ncol, ncolt) != i4vec_sum(nrow, nrowt) {
+        if i4vec_sum(ncolt) != i4vec_sum(nrowt) {
             println!("");
             println!("RCONT - Fatal error!");
             println!("  The row and column sum vectors do not have the same sum.");
             *ierror = 6;
             return;
         }
-        ntotal = i4vec_sum(ncol, ncolt);
+        ntotal = i4vec_sum(ncolt);
     }
     jwork = vec![0i32; ncol as usize];
     for i in 0..(ncol - 1) {
