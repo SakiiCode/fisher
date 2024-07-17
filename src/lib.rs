@@ -169,23 +169,21 @@ pub fn sim(table: Vec<Vec<u32>>, iterations: u32) -> PyResult<f64> {
         x += 1.0;
     }
 
-    let mut row_sum_i = row_sum.iter().map(|s| (*s).try_into().unwrap()).collect();
-    let mut col_sum_i = col_sum.iter().map(|s| (*s).try_into().unwrap()).collect();
+    let row_sum_i = row_sum.iter().map(|s| (*s).try_into().unwrap()).collect();
+    let col_sum_i = col_sum.iter().map(|s| (*s).try_into().unwrap()).collect();
 
     let nrow = row_sum.len();
     let ncol = col_sum.len();
     let statistic = find_statistic_r(&table, &fact);
     let mut sum = 0.0;
 
-    unsafe {
-        for _ in 0..iterations {
-            let table = generate(&mut row_sum_i, &mut col_sum_i, &fact);
-            // STATISTIC <- -sum(lfactorial(x))
-            let ans = find_statistic_c(&table, nrow, ncol, &fact);
+    for _ in 0..iterations {
+        let table = generate(&row_sum_i, &col_sum_i, &fact);
+        // STATISTIC <- -sum(lfactorial(x))
+        let ans = find_statistic_c(&table, nrow, ncol, &fact);
 
-            if ans <= statistic + 0.00000001 {
-                sum += 1.0;
-            }
+        if ans <= statistic + 0.00000001 {
+            sum += 1.0;
         }
     }
 
@@ -274,14 +272,11 @@ fn find_statistic_r(table: &Vec<Vec<u32>>, fact: &Vec<f64>) -> f64 {
     return ans;
 }
 
-unsafe fn generate(row_sum: &mut Vec<i32>, col_sum: &mut Vec<i32>, fact: &Vec<f64>) -> Vec<i32> {
+fn generate(row_sum: &Vec<i32>, col_sum: &Vec<i32>, fact: &Vec<f64>) -> Vec<i32> {
     let mut rng = rand::thread_rng();
     let mut seed = rng.gen::<i32>();
 
-    let size = row_sum.len() * col_sum.len();
-    let mut matrix = vec![0; size];
-    let mut ierror = 0;
-    asa159::rcont2(
+    let result = asa159::rcont2(
         i32::try_from(row_sum.len()).unwrap(),
         i32::try_from(col_sum.len()).unwrap(),
         row_sum,
@@ -289,13 +284,15 @@ unsafe fn generate(row_sum: &mut Vec<i32>, col_sum: &mut Vec<i32>, fact: &Vec<f6
         &mut 0,
         &mut seed,
         &fact,
-        &mut matrix,
-        &mut ierror,
     );
-    if ierror != 0 {
-        panic!("Error generating contingency table ({})", ierror);
+
+    if result.is_err() {
+        panic!(
+            "Error generating contingency table ({})",
+            result.err().unwrap()
+        );
     }
-    return matrix;
+    return result.unwrap();
 }
 
 /// A Python module implemented in Rust.

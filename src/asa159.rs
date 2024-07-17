@@ -96,9 +96,7 @@ pub fn rcont2(
     key: &mut i32,
     seed: &mut i32,
     fact: &Vec<f64>,
-    matrix: &mut Vec<i32>,
-    ierror: &mut i32,
-) {
+) -> Result<Vec<i32>, &'static str> {
     let mut done1: i32;
     let mut done2: i32 = 0;
     let mut ia: i32;
@@ -126,47 +124,26 @@ pub fn rcont2(
     let mut sumprb: f64;
     let mut x: f64;
     let mut y: f64;
-    *ierror = 0;
     if *key == 0 {
         *key = 1;
         if nrow <= 1 {
-            println!("");
-            println!("RCONT - Fatal error!");
-            println!("  Input number of rows is less than 2.");
-            *ierror = 1;
-            return;
+            return Err("Input number of rows is less than 2.");
         }
         if ncol <= 1 {
-            println!("");
-            println!("RCONT - Fatal error!");
-            println!("  The number of columns is less than 2.");
-            *ierror = 2;
-            return;
+            return Err("The number of columns is less than 2.");
         }
         for i in 0..nrow {
             if nrowt[i as usize] <= 0 {
-                println!("");
-                println!("RCONT - Fatal error!");
-                println!("  An entry in the row sum vector is not positive.");
-                *ierror = 3;
-                return;
+                return Err("An entry in the row sum vector is not positive.");
             }
         }
         for j in 0..ncol {
             if ncolt[j as usize] <= 0 {
-                println!("");
-                println!("RCONT - Fatal error!");
-                println!("  An entry in the column sum vector is not positive.");
-                *ierror = 4;
-                return;
+                return Err("An entry in the column sum vector is not positive.");
             }
         }
         if i4vec_sum(ncolt) != i4vec_sum(nrowt) {
-            println!("");
-            println!("RCONT - Fatal error!");
-            println!("  The row and column sum vectors do not have the same sum.");
-            *ierror = 6;
-            return;
+            return Err("The row and column sum vectors do not have the same sum.");
         }
         ntotal = i4vec_sum(ncolt);
     }
@@ -175,6 +152,7 @@ pub fn rcont2(
         jwork[i as usize] = ncolt[i as usize];
     }
     jc = ntotal;
+    let mut matrix = vec![0; (nrow * ncol) as usize];
     for l in 0..(nrow - 1) {
         nrowtl = nrowt[l as usize];
         ia = nrowtl;
@@ -278,4 +256,5 @@ pub fn rcont2(
     }
     matrix[(nrow - 1 + (ncol - 1) * nrow) as usize] =
         ib - matrix[(nrow - 1 + (ncol - 2) * nrow) as usize];
+    return Ok(matrix);
 }
