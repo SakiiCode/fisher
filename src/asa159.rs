@@ -51,51 +51,47 @@ pub unsafe extern "C" fn i4mat_print_some(
     let mut j: i32 = 0;
     let mut j2hi: i32 = 0;
     let mut j2lo: i32 = 0;
-    printf(b"\n\0" as *const u8 as *const i8);
-    printf(b"%s\n\0" as *const u8 as *const i8, title);
+    println!("");
+    println!("{}", title);
     if m <= 0 as i32 || n <= 0 as i32 {
-        printf(b"\n\0" as *const u8 as *const i8);
-        printf(b"  (None)\n\0" as *const u8 as *const i8);
+        println!("");
+        println!("  (None)");
         return;
     }
     for j2lo in (jlo..=jhi).step_by(10) {
         j2hi = j2lo + 10 as i32 - 1 as i32;
         j2hi = i4_min(j2hi, n);
         j2hi = i4_min(j2hi, jhi);
-        printf(b"\n\0" as *const u8 as *const i8);
-        printf(b"  Col:\0" as *const u8 as *const i8);
+        println!("");
+        print!("  Col:");
         for j in j2lo..=j2hi {
-            printf(b"  %6d\0" as *const u8 as *const i8, j - 1 as i32);
+            print!("  %6d", j - 1 as i32);
         }
-        printf(b"\n\0" as *const u8 as *const i8);
-        printf(b"  Row\n\0" as *const u8 as *const i8);
-        printf(b"\n\0" as *const u8 as *const i8);
+        println!("");
+        println!("  Row");
+        println!("");
         i2lo = i4_max(ilo, 1 as i32);
         i2hi = i4_min(ihi, m);
         for i in i2lo..=i2hi {
-            printf(b"%5d:\0" as *const u8 as *const i8, i - 1 as i32);
+            print!("%5d:", i - 1 as i32);
             for j in j2lo..=j2hi {
-                printf(
-                    b"  %6d\0" as *const u8 as *const i8,
+                print!(
+                    b"  %6d",
                     *a.offset((i - 1 as i32 + (j - 1 as i32) * m) as isize),
                 );
             }
-            printf(b"\n\0" as *const u8 as *const i8);
+            println!("");
         }
     }
 }
 #[no_mangle]
 pub unsafe extern "C" fn i4vec_print(mut n: i32, mut a: *mut i32, mut title: *mut i8) {
     let mut i: i32 = 0;
-    printf(b"\n\0" as *const u8 as *const i8);
-    printf(b"%s\n\0" as *const u8 as *const i8, title);
-    printf(b"\n\0" as *const u8 as *const i8);
+    println!("");
+    println!("%s", title);
+    println!("");
     for i in 0..n {
-        printf(
-            b"  %6d: %8d\n\0" as *const u8 as *const i8,
-            i,
-            *a.offset(i as isize),
-        );
+        println!("  %6d: %8d", i, *a.offset(i as isize),);
     }
 }
 #[no_mangle]
@@ -165,24 +161,24 @@ pub unsafe extern "C" fn rcont2(
     if *key == 0 {
         *key = 1 as i32;
         if nrow <= 1 as i32 {
-            printf(b"\n\0" as *const u8 as *const i8);
-            printf(b"RCONT - Fatal error!\n\0" as *const u8 as *const i8);
-            printf(b"  Input number of rows is less than 2.\n\0" as *const u8 as *const i8);
+            println!("");
+            println!("RCONT - Fatal error!");
+            println!("  Input number of rows is less than 2.");
             *ierror = 1 as i32;
             return;
         }
         if ncol <= 1 as i32 {
-            printf(b"\n\0" as *const u8 as *const i8);
-            printf(b"RCONT - Fatal error!\n\0" as *const u8 as *const i8);
-            printf(b"  The number of columns is less than 2.\n\0" as *const u8 as *const i8);
+            println!("");
+            println!("RCONT - Fatal error!");
+            println!("  The number of columns is less than 2.");
             *ierror = 2 as i32;
             return;
         }
         i = 0 as i32;
         while i < nrow {
             if *nrowt.offset(i as isize) <= 0 as i32 {
-                printf(b"\n\0" as *const u8 as *const i8);
-                printf(b"RCONT - Fatal error!\n\0" as *const u8 as *const i8);
+                println!("");
+                println!("RCONT - Fatal error!");
                 printf(
                     b"  An entry in the row sum vector is not positive.\n\0" as *const u8
                         as *const i8,
@@ -195,8 +191,8 @@ pub unsafe extern "C" fn rcont2(
         j = 0 as i32;
         while j < ncol {
             if *ncolt.offset(j as isize) <= 0 as i32 {
-                printf(b"\n\0" as *const u8 as *const i8);
-                printf(b"RCONT - Fatal error!\n\0" as *const u8 as *const i8);
+                println!("");
+                println!("RCONT - Fatal error!");
                 printf(
                     b"  An entry in the column sum vector is not positive.\n\0" as *const u8
                         as *const i8,
@@ -207,8 +203,8 @@ pub unsafe extern "C" fn rcont2(
             j += 1;
         }
         if i4vec_sum(ncol, ncolt) != i4vec_sum(nrow, nrowt) {
-            printf(b"\n\0" as *const u8 as *const i8);
-            printf(b"RCONT - Fatal error!\n\0" as *const u8 as *const i8);
+            println!("");
+            println!("RCONT - Fatal error!");
             printf(
                 b"  The row and column sum vectors do not have the same sum.\n\0" as *const u8
                     as *const i8,
