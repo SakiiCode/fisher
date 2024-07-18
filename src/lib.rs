@@ -14,10 +14,10 @@ macro_rules! idx {
     };
 }
 
-fn calc_p(mat_new: &mut Vec<u32>, r_sum: &Vec<u32>, c_sum: &Vec<u32>, p_0: f64) -> f64 {
+fn fill(mat_new: &mut Vec<u32>, r_sum: &Vec<u32>, c_sum: &Vec<u32>, p_0: f64) -> f64 {
     let r = r_sum.len();
     let c = c_sum.len();
-    print!("{:?} -> ", &mat_new);
+    //print!("{:?} -> ", &mat_new);
 
     for i in 0..r - 1 {
         let mut temp = r_sum[i];
@@ -37,7 +37,7 @@ fn calc_p(mat_new: &mut Vec<u32>, r_sum: &Vec<u32>, c_sum: &Vec<u32>, p_0: f64) 
     let mut temp = r_sum[r - 1];
     for j in 0..c - 1 {
         if temp < idx!(mat_new, r - 1, j, c) {
-            println!();
+            //println!();
             return 0.0;
         } else {
             temp -= idx!(mat_new, r - 1, j, c);
@@ -45,7 +45,7 @@ fn calc_p(mat_new: &mut Vec<u32>, r_sum: &Vec<u32>, c_sum: &Vec<u32>, p_0: f64) 
     }
 
     idx!(mat_new, r - 1, c - 1, c) = temp;
-    print!("{:?} ", &mat_new);
+    //print!("{:?} ", &mat_new);
 
     let mut p_1 = Quotient::default();
 
@@ -57,10 +57,10 @@ fn calc_p(mat_new: &mut Vec<u32>, r_sum: &Vec<u32>, c_sum: &Vec<u32>, p_0: f64) 
 
     let p_1_res = p_1.solve();
     if p_1_res <= p_0 + 0.00000001 {
-        println!(" p={}", p_1_res);
+        //println!(" p={}", p_1_res);
         return p_1_res;
     } else {
-        println!(" p=0.0");
+        //println!(" p=0.0");
         return 0.0;
     }
 }
@@ -87,12 +87,12 @@ fn _dfs(
     }
 
     return (0..=min(max_1, max_2))
-        //.into_par_iter()
+        .into_par_iter()
         .map(|k| {
             let mut mat_new2 = mat_new.clone();
             idx!(mat_new2, xx, yy, c) = k;
             if xx + 2 == r && yy + 2 == c {
-                return calc_p(&mut mat_new2, r_sum, c_sum, p_0);
+                return fill(&mut mat_new2, r_sum, c_sum, p_0);
             } else if xx + 2 == r {
                 return _dfs(&mut mat_new2, 0, yy + 1, r_sum, c_sum, p_0);
             } else {
@@ -148,9 +148,8 @@ pub fn sim(table: Vec<Vec<u32>>, iterations: u32) -> PyResult<f64> {
 
     let mut fact = vec![0.0; n + 1];
     fact[0] = 0.0;
-    fact[1] = 0.0;
-    let mut x = 2.0;
-    for i in 2..=n {
+    let mut x = 1.0;
+    for i in 1..=n {
         fact[i] = fact[i - 1] + f64::ln(x);
         x += 1.0;
     }
@@ -200,7 +199,7 @@ pub fn exact(table: Vec<Vec<u32>>, workspace: Option<u32>) -> PyResult<f64> {
         let exp = sum / 20;
         wsize = 200 * 10u32.pow(exp.clamp(3, 6));
     }
-    dbg!(wsize);
+    //dbg!(wsize);
 
     let result;
     let code;
