@@ -20,4 +20,5 @@ rand = "0.8.5"
 rayon = "1.10.0"
 
 [profile.release]
-opt-level=0
+opt-level=3
+
