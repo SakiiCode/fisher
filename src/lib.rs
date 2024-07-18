@@ -350,6 +350,7 @@ fn rec5x4() {
 }
 
 #[test]
+#[ignore]
 fn rec5x5() {
     // 12.13s
     let input = vec![
@@ -365,7 +366,6 @@ fn rec5x5() {
 }
 
 #[test]
-#[ignore]
 fn proc2x2() {
     let input = vec![vec![3, 4], vec![4, 2]];
     let output = exact(input, None).unwrap();
@@ -374,7 +374,6 @@ fn proc2x2() {
 }
 
 #[test]
-#[ignore]
 fn proc4x4() {
     let input = vec![
         vec![4, 1, 0, 1],
@@ -393,7 +392,6 @@ fn proc4x4() {
 }
 
 #[test]
-#[ignore]
 fn proc3x4big() {
     let input = vec![
         vec![11, 12, 18, 15],
@@ -411,7 +409,6 @@ fn proc3x4big() {
 }
 
 #[test]
-#[ignore]
 fn proc4x5big() {
     let input = vec![
         vec![8, 3, 5, 5, 6],
@@ -430,7 +427,6 @@ fn proc4x5big() {
 }
 
 #[test]
-#[ignore]
 fn proc5x5() {
     let input = vec![
         vec![3, 1, 1, 1, 0],
