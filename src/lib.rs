@@ -317,6 +317,20 @@ fn rec4x4() {
 
 #[test]
 #[ignore]
+fn rec4x4big() {
+    let input = vec![
+        vec![28, 28, 0, 28],
+        vec![0, 0, 16, 0],
+        vec![0, 0, 5, 0],
+        vec![0, 0, 7, 0],
+    ];
+    let output = recursive(input).unwrap();
+    dbg!(output);
+    assert_eq!(output, 0.00594949486831653); // this should be 0.0
+}
+
+#[test]
+#[ignore]
 fn rec3x4big() {
     // DNF
     let input = vec![
@@ -388,6 +402,19 @@ fn proc4x4() {
         0.01096,
         epsilon = 0.0001
     ));
+}
+
+#[test]
+fn proc4x4big() {
+    let input = vec![
+        vec![28, 28, 28, 0],
+        vec![0, 0, 0, 16],
+        vec![0, 0, 0, 5],
+        vec![0, 0, 0, 7],
+    ];
+    let output = exact(input, None).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(f64, output, 0.0, epsilon = 0.0001));
 }
 
 #[test]
@@ -480,6 +507,19 @@ fn sim4x4() {
     let result = sim(input, 10000).unwrap();
     dbg!(result);
     assert!(float_cmp::approx_eq!(f64, result, 0.011, epsilon = 0.004));
+}
+
+#[test]
+fn sim4x4big() {
+    let input = vec![
+        vec![28, 28, 28, 0],
+        vec![0, 0, 0, 16],
+        vec![0, 0, 0, 5],
+        vec![0, 0, 0, 7],
+    ];
+    let result = sim(input, 100000).unwrap();
+    dbg!(result);
+    assert!(float_cmp::approx_eq!(f64, result, 0.0, epsilon = 0.004));
 }
 
 #[test]
