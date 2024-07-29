@@ -15,6 +15,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Mathematics",
 
 ]
+description = "Fast multithreaded implementation for calculating Fisher's exact test for any RxC sized table"
 dynamic = ["version"]
 
 [project.urls]
