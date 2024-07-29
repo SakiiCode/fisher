@@ -96,7 +96,7 @@ pub fn rcont2(
     key: &mut i32,
     seed: &mut i32,
     fact: &Vec<f64>,
-) -> Result<Vec<i32>, &'static str> {
+) -> Result<Vec<i32>, (i32, &'static str)> {
     let mut done1: i32;
     let mut done2: i32 = 0;
     let mut ia: i32;
@@ -127,23 +127,38 @@ pub fn rcont2(
     if *key == 0 {
         *key = 1;
         if nrow <= 1 {
-            return Err("Input number of rows is less than 2.");
+            return Err((
+                1,
+                "RCONT - Fatal error!\nInput number of rows is less than 2.",
+            ));
         }
         if ncol <= 1 {
-            return Err("The number of columns is less than 2.");
+            return Err((
+                2,
+                "RCONT - Fatal error!\n\tThe number of columns is less than 2.",
+            ));
         }
         for i in 0..nrow {
             if nrowt[i as usize] <= 0 {
-                return Err("An entry in the row sum vector is not positive.");
+                return Err((
+                    3,
+                    "RCONT - Fatal error!\n\tAn entry in the row sum vector is not positive.",
+                ));
             }
         }
         for j in 0..ncol {
             if ncolt[j as usize] <= 0 {
-                return Err("An entry in the column sum vector is not positive.");
+                return Err((
+                    4,
+                    "RCONT - Fatal error!\n\tAn entry in the column sum vector is not positive.",
+                ));
             }
         }
         if i4vec_sum(ncolt) != i4vec_sum(nrowt) {
-            return Err("The row and column sum vectors do not have the same sum.");
+            return Err((
+                5,
+                "RCONT - Fatal error!\n\tThe row and column sum vectors do not have the same sum.",
+            ));
         }
         ntotal = i4vec_sum(ncolt);
     }

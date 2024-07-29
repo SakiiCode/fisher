@@ -161,11 +161,17 @@ pub fn sim(table: Vec<Vec<u32>>, iterations: u32) -> PyResult<f64> {
     let ncol = col_sum.len();
     let statistic = find_statistic_r(&table, &fact);
 
+    let test = generate(&row_sum_i, &col_sum_i, &fact);
+    if test.is_err() {
+        println!("{}", test.as_ref().unwrap_err().1);
+        return Ok(-f64::from(test.unwrap_err().0));
+    }
+
     // STATISTIC <- -sum(lfactorial(x))
     let sum = (0..iterations)
         .into_par_iter()
         .map(|_| generate(&row_sum_i, &col_sum_i, &fact))
-        .map(|table| find_statistic_c(&table, nrow, ncol, &fact))
+        .map(|table| find_statistic_c(&table.unwrap(), nrow, ncol, &fact))
         .filter(|ans| *ans <= statistic + 0.00000001)
         .count() as f64;
 
@@ -254,7 +260,11 @@ fn find_statistic_r(table: &Vec<Vec<u32>>, fact: &Vec<f64>) -> f64 {
     return ans;
 }
 
-fn generate(row_sum: &Vec<i32>, col_sum: &Vec<i32>, fact: &Vec<f64>) -> Vec<i32> {
+fn generate(
+    row_sum: &Vec<i32>,
+    col_sum: &Vec<i32>,
+    fact: &Vec<f64>,
+) -> Result<Vec<i32>, (i32, &'static str)> {
     let mut rng = rand::thread_rng();
     let mut seed = rng.gen::<i32>();
 
@@ -268,13 +278,7 @@ fn generate(row_sum: &Vec<i32>, col_sum: &Vec<i32>, fact: &Vec<f64>) -> Vec<i32>
         &fact,
     );
 
-    if result.is_err() {
-        panic!(
-            "Error generating contingency table ({})",
-            result.err().unwrap()
-        );
-    }
-    return result.unwrap();
+    return result;
 }
 
 /// A Python module implemented in Rust.
@@ -507,6 +511,17 @@ fn sim4x4() {
     let result = sim(input, 10000).unwrap();
     dbg!(result);
     assert!(float_cmp::approx_eq!(f64, result, 0.011, epsilon = 0.004));
+}
+
+#[test]
+fn sim4x4error() {
+    let input = vec![
+        vec![4, 1, 0, 1],
+        vec![1, 5, 0, 0],
+        vec![0, 0, 0, 0],
+        vec![1, 1, 0, 3],
+    ];
+    assert!(sim(input, 10000).is_err());
 }
 
 #[test]
