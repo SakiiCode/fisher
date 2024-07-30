@@ -106,15 +106,9 @@ fn _dfs(
 #[pyfunction]
 pub fn recursive(table: Vec<Vec<u32>>) -> PyResult<f64> {
     let row_sum: Vec<u32> = table.iter().map(|row| row.iter().sum()).collect();
-    let mut col_sum: Vec<u32> = vec![];
-
-    for j in 0..table[0].len() {
-        let mut temp = 0;
-        for i in 0..table.len() {
-            temp += table[i][j];
-        }
-        col_sum.push(temp);
-    }
+    let col_sum: Vec<u32> = (0..(table[0].len()))
+        .map(|index| table.iter().map(|row| row[index]).sum())
+        .collect();
 
     let mut mat = vec![0; col_sum.len() * row_sum.len()];
 
@@ -134,15 +128,9 @@ pub fn recursive(table: Vec<Vec<u32>>) -> PyResult<f64> {
 #[pyfunction]
 pub fn sim(table: Vec<Vec<u32>>, iterations: u32) -> PyResult<f64> {
     let row_sum: Vec<u32> = table.iter().map(|row| row.iter().sum()).collect();
-    let mut col_sum: Vec<u32> = vec![];
-
-    for j in 0..table[0].len() {
-        let mut temp = 0;
-        for i in 0..table.len() {
-            temp += table[i][j];
-        }
-        col_sum.push(temp);
-    }
+    let col_sum: Vec<u32> = (0..(table[0].len()))
+        .map(|index| table.iter().map(|row| row[index]).sum())
+        .collect();
 
     let n = row_sum.iter().sum::<u32>().try_into().unwrap();
 
@@ -185,17 +173,15 @@ pub fn sim(table: Vec<Vec<u32>>, iterations: u32) -> PyResult<f64> {
 #[pyo3(signature = (table, workspace=None))]
 pub fn exact(table: Vec<Vec<u32>>, workspace: Option<u32>) -> PyResult<f64> {
     let row_sum: Vec<u32> = table.iter().map(|row| row.iter().sum()).collect();
-    let mut col_sum: Vec<u32> = vec![];
+    let col_sum: Vec<u32> = (0..(table[0].len()))
+        .map(|index| table.iter().map(|row| row[index]).sum())
+        .collect();
 
-    let mut seq = vec![];
-    for j in 0..table[0].len() {
-        let mut temp = 0;
-        for i in 0..table.len() {
-            temp += table[i][j];
-            seq.push(table[i][j] as f64);
-        }
-        col_sum.push(temp);
-    }
+    // seq needs to be column-major
+    let mut seq: Vec<f64> = (0..(table[0].len()))
+        .map(|index| table.iter().map(move |row| row[index] as f64))
+        .flatten()
+        .collect();
 
     let wsize;
     if workspace.is_some() {
