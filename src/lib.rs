@@ -507,7 +507,7 @@ fn sim4x4error() {
         vec![0, 0, 0, 0],
         vec![1, 1, 0, 3],
     ];
-    assert!(sim(input, 10000).is_err());
+    assert!(sim(input, 10000).unwrap() < 0.0);
 }
 
 #[test]
