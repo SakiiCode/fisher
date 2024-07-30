@@ -1,6 +1,6 @@
 # Fisher RxC
 
-Fast multithreaded implementation for calculating Fisher's exact test for any RxC size tables written in Rust using [Maturin](https://github.com/PyO3/maturin).
+Fast multithreaded implementation of calculating Fisher's exact test for any RxC size table. Written in Rust using [Maturin](https://github.com/PyO3/maturin).
 
 ## Installation
 
@@ -24,7 +24,7 @@ Workspace size of 2e8 takes ~800MB of RAM.
 
 Calculate Fisher's exact test for 2D list by Monte Carlo simulation. This multithreaded implementation can be more than 100x faster than using R through _rpy2_.
 
-A modern CPU can quickly do 10^9 iterations and get very accurate results.
+A modern CPU can quickly do 10^8 iterations and get very accurate results.
 
 `fisher.recursive(table)`
 
