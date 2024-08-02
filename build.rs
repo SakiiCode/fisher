@@ -5,6 +5,6 @@ fn main() {
 
     cc::Build::new()
         .file("src/asa643.c")
-        .flag(if cfg!(windows) { "/Od" } else { "-O0" })
+        //.flag(if cfg!(windows) { "/Od" } else { "-O0" })
         .compile("fexact");
 }

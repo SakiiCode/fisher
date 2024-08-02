@@ -569,7 +569,8 @@ int f5xact_(doublereal *pastp, doublereal *tol, integer *kval, integer *key, int
 
     integer i__1;
 
-    integer ird, ipn, itp, itmp;
+    static integer itp;
+    integer ird, ipn, itmp;
     doublereal test1, test2;
 
     --nl;

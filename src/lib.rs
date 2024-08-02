@@ -1,8 +1,9 @@
+use lazy_static::lazy_static;
 use math::Quotient;
 use pyo3::prelude::*;
 use rand::Rng;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
-use std::{cmp::min, vec};
+use std::{cmp::min, sync::Mutex, vec};
 
 mod asa159;
 mod asa643;
@@ -169,6 +170,10 @@ pub fn sim(table: Vec<Vec<u32>>, iterations: u32) -> PyResult<f64> {
     return Ok(pvalue);
 }
 
+lazy_static! {
+    static ref FEXACT_LOCK: Mutex<()> = Mutex::new(());
+}
+
 #[pyfunction]
 #[pyo3(signature = (table, workspace=None))]
 pub fn exact(table: Vec<Vec<u32>>, workspace: Option<u32>) -> PyResult<f64> {
@@ -196,6 +201,7 @@ pub fn exact(table: Vec<Vec<u32>>, workspace: Option<u32>) -> PyResult<f64> {
     let result;
     let code;
     unsafe {
+        let _guard = FEXACT_LOCK.lock();
         let mut nrow = [row_sum.len() as i32; 1];
         let mut ncol = [col_sum.len() as i32; 1];
         let mut expect = [0.0];
