@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <setjmp.h>
 #include <math.h>
+#include <limits.h>
 
 typedef signed int integer;
 typedef double doublereal;
@@ -18,6 +19,7 @@ static integer c__30 = 30;
 static integer c__7 = 7;
 static integer c__40 = 40;
 static integer c__20 = 20;
+static integer c__501 = 501;
 
 jmp_buf err_buf;
 
@@ -1426,7 +1428,7 @@ int f2xact_(integer *nrow, integer *ncol, doublereal *table,
             integer *key2, integer *iwk, doublereal *rwk)
 {
 
-    integer imax = 2147483647;
+    integer imax = INT_MAX;
     real amiss = -12345.f;
     doublereal tol = 3.45254e-7;
     real emx = 1e30f;
@@ -1663,6 +1665,13 @@ int f2xact_(integer *nrow, integer *ncol, doublereal *table,
                        "rgest key is larger than the largest representable integer. "
                        " The algorithm cannot proceed.");
         goto L9000;
+    }
+
+    if (iro[nro] + 1 > imax / kyy[nro])
+    {
+        prterr_(&c__501, "The hash table key cannot be computed because the la"
+                         "rgest key is larger than the largest representable integer. "
+                         " The algorithm cannot proceed.");
     }
 
     fact[0] = 0.;

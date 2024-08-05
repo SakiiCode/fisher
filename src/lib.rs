@@ -485,6 +485,20 @@ fn proc7x4_2e8() {
 }
 
 #[test]
+#[ignore]
+fn proc4x15() {
+    let input = vec![
+        vec![23, 22, 13, 22, 19, 16, 22, 22, 24, 20, 14, 16, 19, 16, 19],
+        vec![26, 20, 6, 20, 13, 12, 21, 18, 19, 14, 14, 14, 18, 11, 14],
+        vec![26, 22, 14, 22, 14, 17, 22, 21, 23, 23, 14, 18, 16, 12, 13],
+        vec![26, 23, 13, 24, 18, 19, 24, 25, 22, 18, 18, 17, 21, 21, 18],
+    ];
+    let result = exact(input, Some(200000000)).unwrap();
+    dbg!(result);
+    assert_eq!(result, -501.0);
+}
+
+#[test]
 fn sim2x2() {
     let input = vec![vec![3, 4], vec![4, 2]];
     let result = sim(input, 10000).unwrap();
