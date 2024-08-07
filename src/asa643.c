@@ -3,6 +3,7 @@
 #include <setjmp.h>
 #include <math.h>
 #include <limits.h>
+#include <sys/mman.h>
 
 typedef signed int integer;
 typedef double doublereal;
@@ -2200,7 +2201,21 @@ int fexact_(integer *nrow, integer *ncol, doublereal *table,
 {
 
     integer table_dim1, table_offset, i__1, i__2, i__3;
-    doublereal *equiv_1 = malloc(*ws / 2 * sizeof(doublereal));
+    doublereal *equiv_1 = 0;
+    size_t allocation = *ws / 2 * sizeof(doublereal);
+#ifdef __linux__
+    int error = posix_memalign(&equiv_1, 1 << 21, allocation); // malloc is not enough!
+    if (equiv_1 == 0)
+    {
+        equiv_1 = malloc(allocation);
+    }
+    else
+    {
+        madvise(equiv_1, allocation, MADV_HUGEPAGE);
+    }
+#else
+    equiv_1 = malloc(allocation);
+#endif
 
     integer i__, j, k, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, kk,
         i3a, i3b, i3c, i9a, nco, nro, numb, iiwk;
