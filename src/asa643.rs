@@ -6,15 +6,15 @@ type doublereal = libc::c_double;
 
 extern "C" {
     pub fn fexact_(
-        nrow: *mut integer,
-        ncol: *mut integer,
+        nrow: integer,
+        ncol: integer,
         table: *mut doublereal,
-        ldtabl: *mut integer,
+        ldtabl: integer,
         expect: *mut doublereal,
         percnt: *mut doublereal,
         emin: *mut doublereal,
         prt: *mut doublereal,
         pre: *mut doublereal,
-        ws: *mut integer,
+        ws: integer,
     ) -> c_int;
 }
