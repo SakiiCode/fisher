@@ -3,7 +3,10 @@
 #include <setjmp.h>
 #include <math.h>
 #include <limits.h>
+
+#ifdef __linux__
 #include <sys/mman.h>
+#endif
 
 typedef signed int integer;
 typedef double doublereal;
