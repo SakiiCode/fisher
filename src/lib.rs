@@ -202,28 +202,28 @@ pub fn exact(table: Vec<Vec<u32>>, workspace: Option<u32>) -> PyResult<f64> {
     let code;
     unsafe {
         let _guard = FEXACT_LOCK.lock();
-        let mut nrow = [row_sum.len() as i32; 1];
-        let mut ncol = [col_sum.len() as i32; 1];
-        let mut expect = [0.0];
-        let mut percnt = [0.0];
-        let mut emin = [0.0];
-        let mut prt = [0.0];
-        let mut pre = [0.0];
-        let mut ws = [wsize.try_into().unwrap()];
+        let nrow = row_sum.len() as i32;
+        let ncol = col_sum.len() as i32;
+        let mut expect = 0.0;
+        let mut percnt = 0.0;
+        let mut emin = 0.0;
+        let mut prt = 0.0;
+        let mut pre = 0.0;
+        let ws = wsize.try_into().unwrap();
         code = asa643::fexact_(
-            nrow.as_mut_ptr(),
-            ncol.as_mut_ptr(),
+            nrow,
+            ncol,
             seq.as_mut_ptr(),
-            nrow.as_mut_ptr(),
-            expect.as_mut_ptr(),
-            percnt.as_mut_ptr(),
-            emin.as_mut_ptr(),
-            prt.as_mut_ptr(),
-            pre.as_mut_ptr(),
-            ws.as_mut_ptr(),
+            nrow,
+            &mut expect,
+            &mut percnt,
+            &mut emin,
+            &mut prt,
+            &mut pre,
+            ws,
         );
 
-        result = pre[0];
+        result = pre;
     }
     if code < 0 {
         return Ok(f64::try_from(code).unwrap());
