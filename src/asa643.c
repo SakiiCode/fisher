@@ -21,6 +21,7 @@ static integer c__7 = 7;
 static integer c__40 = 40;
 static integer c__20 = 20;
 static integer c__501 = 501;
+static integer c__502 = 502;
 
 jmp_buf err_buf;
 
@@ -1301,11 +1302,23 @@ L120:
             isort_(&nco, &it[1]);
         }
 
-        key = it[1] * kyy + it[2];
+        double dkyy = (double)kyy;
+        double dkey = it[1] * dkyy + it[2];
         i__1 = nco;
         for (i__ = 3; i__ <= i__1; ++i__)
         {
-            key = it[i__] + key * kyy;
+            dkey = it[i__] + dkey * dkyy;
+            /* L150: */
+        }
+        if (dkey > INT_MAX)
+        {
+            prterr_(&c__502, "The hash table key cannot be computed because the la"
+                             "rgest key is larger than the largest representable integer. "
+                             " The algorithm cannot proceed.");
+        }
+        else
+        {
+            key = (int)dkey;
         }
 
         ipn = key % ldst + 1;
