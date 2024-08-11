@@ -539,9 +539,8 @@ L10:
     ret_val *= f;
     return ret_val;
 }
-
-int f5xact_(doublereal *pastp, doublereal tol, integer *kval, integer *key, integer ldkey, integer *ipoin, doublereal *stp,
-            integer ldstp, integer *ifrq, integer *npoin, integer *nr, integer *nl, integer *ifreq, integer *itop, logical *ipsh)
+int f5xact_(doublereal pastp, doublereal tol, integer *kval, integer *key, integer ldkey, integer *ipoin, doublereal *stp,
+            integer ldstp, integer *ifrq, integer *npoin, integer *nr, integer *nl, integer *ifreq, integer *itop, logical ipsh)
 {
 
     integer i__1;
@@ -557,7 +556,7 @@ int f5xact_(doublereal *pastp, doublereal tol, integer *kval, integer *key, inte
     --ipoin;
     --key;
 
-    if (*ipsh)
+    if (ipsh)
     {
 
         ird = *kval % ldkey + 1;
@@ -607,15 +606,15 @@ int f5xact_(doublereal *pastp, doublereal tol, integer *kval, integer *key, inte
         npoin[*itop] = -1;
         nr[*itop] = -1;
         nl[*itop] = -1;
-        stp[*itop] = *pastp;
+        stp[*itop] = pastp;
         ifrq[*itop] = *ifreq;
         goto L9000;
     }
 
 L40:
     ipn = ipoin[itp];
-    test1 = *pastp - tol;
-    test2 = *pastp + tol;
+    test1 = pastp - tol;
+    test2 = pastp + tol;
 
 L50:
     if (stp[ipn] < test1)
@@ -681,7 +680,7 @@ L60:
 
     npoin[*itop] = npoin[itmp];
     npoin[itmp] = *itop;
-    stp[*itop] = *pastp;
+    stp[*itop] = pastp;
     ifrq[*itop] = *ifreq;
     nl[*itop] = -1;
     nr[*itop] = -1;
@@ -1908,7 +1907,7 @@ L300:
         {
 
             d__1 = pastp + ddf;
-            f5xact_(&d__1, tol, &kval, &key[jkey], ldkey, &ipoin[jkey], &stp[jstp], ldstp, &ifrq[jstp], &ifrq[jstp2], &ifrq[jstp3], &ifrq[jstp4], &ifreq, &itop, &ipsh);
+            f5xact_(d__1, tol, &kval, &key[jkey], ldkey, &ipoin[jkey], &stp[jstp], ldstp, &ifrq[jstp], &ifrq[jstp2], &ifrq[jstp3], &ifrq[jstp4], &ifreq, &itop, ipsh);
             ipsh = 0;
         }
     }
