@@ -379,7 +379,12 @@ fn proc2x2() {
     let input = vec![vec![3, 4], vec![4, 2]];
     let output = exact(input, None).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.5920745920745918);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.5920745920745918,
+        epsilon = 0.000001
+    ));
 }
 
 #[test]
@@ -395,8 +400,8 @@ fn proc4x4() {
     assert!(float_cmp::approx_eq!(
         f64,
         output,
-        0.01096,
-        epsilon = 0.0001
+        0.01096124432190692,
+        epsilon = 0.000001
     ));
 }
 
@@ -410,7 +415,7 @@ fn proc4x4big() {
     ];
     let output = exact(input, None).unwrap();
     dbg!(output);
-    assert!(float_cmp::approx_eq!(f64, output, 0.0, epsilon = 0.0001));
+    assert!(float_cmp::approx_eq!(f64, output, 0.0, epsilon = 0.000001));
 }
 
 #[test]
@@ -425,8 +430,8 @@ fn proc3x4big() {
     assert!(float_cmp::approx_eq!(
         f64,
         output,
-        0.8821660735808745,
-        epsilon = 0.0001
+        0.8821660735808727,
+        epsilon = 0.000001
     ));
 }
 
@@ -443,8 +448,8 @@ fn proc4x5big() {
     assert!(float_cmp::approx_eq!(
         f64,
         output,
-        0.39346963278449454,
-        epsilon = 0.0001
+        0.39346963278427133,
+        epsilon = 0.000001
     ));
 }
 
@@ -462,8 +467,28 @@ fn proc5x5() {
     assert!(float_cmp::approx_eq!(
         f64,
         result,
-        0.22200753799676035,
-        epsilon = 0.0001
+        0.22200753799676337,
+        epsilon = 0.000001
+    ));
+}
+
+#[test]
+#[ignore]
+fn proc5x5_large() {
+    let input = vec![
+        vec![8, 8, 3, 5, 2],
+        vec![5, 3, 3, 0, 2],
+        vec![8, 9, 9, 0, 0],
+        vec![9, 4, 5, 3, 2],
+        vec![4, 6, 6, 1, 0],
+    ];
+    let result = exact(input, None).unwrap();
+    dbg!(result);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        result,
+        0.26314046636138944,
+        epsilon = 0.00001
     ));
 }
 
@@ -481,7 +506,12 @@ fn proc7x4_2e8() {
     ];
     let result = exact(input, None).unwrap();
     dbg!(result);
-    assert!(float_cmp::approx_eq!(f64, result, 0.9239, epsilon = 0.0001));
+    assert!(float_cmp::approx_eq!(
+        f64,
+        result,
+        0.9239149531167176,
+        epsilon = 0.00001
+    ));
 }
 
 #[test]
