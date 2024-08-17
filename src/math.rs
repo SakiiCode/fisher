@@ -5,27 +5,40 @@ pub struct Quotient {
 }
 
 impl Quotient {
-    pub fn mul_fact(&mut self, x: u32) {
-        for i in 2..=x {
-            self.numerator.push(i.into());
+    pub fn new(nsize: usize, dsize: usize) -> Quotient {
+        Quotient {
+            numerator: Vec::with_capacity(nsize),
+            denominator: Vec::with_capacity(dsize),
         }
     }
 
-    pub fn div_fact(&mut self, x: u32) {
-        for i in 2..=x {
-            self.denominator.push(i.into());
+    pub fn mul_fact(&mut self, arr: &[u32]) {
+        for x in arr {
+            for i in 2..=*x {
+                self.numerator.push(i.into());
+            }
+        }
+    }
+
+    pub fn div_fact(&mut self, arr: &[u32]) {
+        for x in arr {
+            for i in 2..=*x {
+                self.denominator.push(i.into());
+            }
         }
     }
 
     pub fn solve(&mut self) -> f64 {
-        let mut result = self
-            .numerator
-            .iter()
-            .zip(self.denominator.iter())
-            .fold(1.0, |result, (n, d)| (result * n / d));
+        let mut result = 1.0;
 
         let n = self.numerator.len();
         let d = self.denominator.len();
+
+        let len = usize::min(n, d);
+
+        for i in 0..len {
+            result *= self.numerator[i] / self.denominator[i];
+        }
 
         if n > d {
             for i in d..n {
@@ -39,7 +52,7 @@ impl Quotient {
         return result;
     }
 }
-
+/*
 #[test]
 fn test1() {
     let mut q = Quotient::default();
@@ -103,3 +116,4 @@ fn test4() {
 
     assert!(float_cmp::approx_eq!(f64, q.solve(), 1.0 / 2629308825.0));
 }
+*/

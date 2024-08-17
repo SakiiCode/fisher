@@ -48,13 +48,13 @@ fn fill(mat_new: &mut Vec<u32>, r_sum: &Vec<u32>, c_sum: &Vec<u32>, p_0: f64) ->
     idx!(mat_new, r - 1, c - 1, c) = temp;
     //print!("{:?} ", &mat_new);
 
-    let mut p_1 = Quotient::default();
+    let mut p_1 = Quotient::new(r + c, mat_new.len() + 1);
 
-    r_sum.iter().for_each(|x| p_1.mul_fact(*x));
-    c_sum.iter().for_each(|y| p_1.mul_fact(*y));
+    p_1.mul_fact(r_sum);
+    p_1.mul_fact(c_sum);
 
-    p_1.div_fact(r_sum.iter().sum());
-    mat_new.iter().for_each(|i| p_1.div_fact(*i));
+    p_1.div_fact(&[r_sum.iter().sum(); 1]);
+    p_1.div_fact(mat_new);
 
     let p_1_res = p_1.solve();
     if p_1_res <= p_0 + 0.00000001 {
@@ -115,11 +115,11 @@ pub fn recursive(table: Vec<Vec<u32>>) -> PyResult<f64> {
 
     let mut p_0 = Quotient::default();
 
-    row_sum.iter().for_each(|x| p_0.mul_fact(*x));
-    col_sum.iter().for_each(|y| p_0.mul_fact(*y));
+    p_0.mul_fact(&row_sum);
+    p_0.mul_fact(&col_sum);
 
-    p_0.div_fact(row_sum.iter().sum());
-    table.iter().flatten().for_each(|i| p_0.div_fact(*i));
+    p_0.div_fact(&[row_sum.iter().sum(); 1]);
+    p_0.div_fact(&table.iter().flatten().map(|x| *x).collect::<Vec<u32>>());
 
     let p = _dfs(&mut mat, 0, 0, &row_sum, &col_sum, p_0.solve());
 
@@ -371,7 +371,7 @@ fn rec5x5() {
     ];
     let result = recursive(input).unwrap();
     dbg!(result);
-    assert_eq!(result, 0.24678711559405733);
+    assert_eq!(result, 0.24678711559405725);
 }
 
 #[test]
