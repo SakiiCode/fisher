@@ -27,11 +27,13 @@ static const integer c__501 = 501;
 static const integer c__502 = 502;
 
 jmp_buf err_buf;
+
 int prterr_(const integer *icode, const char *mes)
 {
     printf("FEXACT ERROR: %d %s\n", *icode, mes);
     longjmp(err_buf, *icode);
 }
+
 integer iwork_(integer *iwkmax, integer *iwkpt, integer *number, const integer *itype)
 {
 
@@ -204,7 +206,7 @@ int f4xact_(integer nrow, integer *irow, integer ncol,
             integer *ncstk, integer *lstk, integer *mstk, integer *nstk, integer *nrstk, integer *irstk, doublereal *ystk, doublereal tol)
 {
 
-    integer icstk_dim1, icstk_offset, irstk_dim1, irstk_offset, i__1;
+    integer icstk_dim1, icstk_offset, irstk_dim1, irstk_offset;
 
     integer i, j, k, l, m, n;
     doublereal y;
@@ -229,8 +231,7 @@ int f4xact_(integer nrow, integer *irow, integer ncol,
 
     if (nrow == 1)
     {
-        i__1 = ncol;
-        for (i = 1; i <= i__1; ++i)
+        for (i = 1; i <= ncol; ++i)
         {
             *dsp -= fact[icol[i]];
         }
@@ -239,8 +240,7 @@ int f4xact_(integer nrow, integer *irow, integer ncol,
 
     if (ncol == 1)
     {
-        i__1 = nrow;
-        for (i = 1; i <= i__1; ++i)
+        for (i = 1; i <= nrow; ++i)
         {
             *dsp -= fact[irow[i]];
         }
@@ -260,14 +260,12 @@ int f4xact_(integer nrow, integer *irow, integer ncol,
         goto L9000;
     }
 
-    i__1 = nrow;
-    for (i = 1; i <= i__1; ++i)
+    for (i = 1; i <= nrow; ++i)
     {
         irstk[i + irstk_dim1] = irow[nrow - i + 1];
     }
 
-    i__1 = ncol;
-    for (j = 1; j <= i__1; ++j)
+    for (j = 1; j <= ncol; ++j)
     {
         icstk[j + icstk_dim1] = icol[ncol - j + 1];
     }
@@ -356,21 +354,18 @@ L60:
     {
         --nco;
         f11act_(&icstk[istk * icstk_dim1 + 1], j, nco, &icstk[(istk + 1) * icstk_dim1 + 1]);
-        i__1 = irt - ict;
-        f8xact_(&irstk[istk * irstk_dim1 + 1], i__1, i, nro, &irstk[(istk + 1) * irstk_dim1 + 1]);
+        f8xact_(&irstk[istk * irstk_dim1 + 1], irt - ict, i, nro, &irstk[(istk + 1) * irstk_dim1 + 1]);
     }
     else
     {
         --nro;
         f11act_(&irstk[istk * irstk_dim1 + 1], i, nro, &irstk[(istk + 1) * irstk_dim1 + 1]);
-        i__1 = ict - irt;
-        f8xact_(&icstk[istk * icstk_dim1 + 1], i__1, j, nco, &icstk[(istk + 1) * icstk_dim1 + 1]);
+        f8xact_(&icstk[istk * icstk_dim1 + 1], ict - irt, j, nco, &icstk[(istk + 1) * icstk_dim1 + 1]);
     }
 
     if (nro == 1)
     {
-        i__1 = nco;
-        for (k = 1; k <= i__1; ++k)
+        for (k = 1; k <= nco; ++k)
         {
             y += fact[icstk[k + (istk + 1) * icstk_dim1]];
         }
@@ -379,8 +374,7 @@ L60:
 
     if (nco == 1)
     {
-        i__1 = nro;
-        for (k = 1; k <= i__1; ++k)
+        for (k = 1; k <= nro; ++k)
         {
             y += fact[irstk[k + (istk + 1) * irstk_dim1]];
         }
@@ -467,6 +461,7 @@ doublereal alogam_(doublereal x, integer *ifault)
     doublereal ret_val;
 
     doublereal f, y, z;
+
     ret_val = zero;
     *ifault = 1;
     if (x < zero)
@@ -508,6 +503,7 @@ doublereal gammds_(doublereal y, doublereal p, integer *ifault)
 
     doublereal a, c, f;
     integer ifail;
+
     *ifault = 1;
     ret_val = zero;
     if (y <= zero || p <= zero)
@@ -539,15 +535,15 @@ L10:
     ret_val *= f;
     return ret_val;
 }
+
 int f5xact_(doublereal pastp, doublereal tol, integer *kval, integer *key, integer ldkey, integer *ipoin, doublereal *stp,
             integer ldstp, integer *ifrq, integer *npoin, integer *nr, integer *nl, integer *ifreq, integer *itop, logical ipsh)
 {
 
-    integer i__1;
-
     static integer itp;
     integer ird, ipn, itmp;
     doublereal test1, test2;
+
     --nl;
     --nr;
     --npoin;
@@ -561,8 +557,7 @@ int f5xact_(doublereal pastp, doublereal tol, integer *kval, integer *key, integ
 
         ird = *kval % ldkey + 1;
 
-        i__1 = ldkey;
-        for (itp = ird; itp <= i__1; ++itp)
+        for (itp = ird; itp <= ldkey; ++itp)
         {
             if (key[itp] == *kval)
             {
@@ -574,8 +569,7 @@ int f5xact_(doublereal pastp, doublereal tol, integer *kval, integer *key, integ
             }
         }
 
-        i__1 = ird - 1;
-        for (itp = 1; itp <= i__1; ++itp)
+        for (itp = 1; itp < ird; ++itp)
         {
             if (key[itp] == *kval)
             {
@@ -688,11 +682,12 @@ L60:
 L9000:
     return 0;
 }
+
 int f7xact_(integer nrow, integer *imax, integer *idif,
             integer *k, integer *ks, integer *iflag)
 {
 
-    integer i__1, i__2;
+    integer i__1;
 
     integer i, m, k1, mm;
 
@@ -742,8 +737,7 @@ int f7xact_(integer nrow, integer *imax, integer *idif,
     {
 
     L50:
-        i__1 = nrow;
-        for (k1 = *k + 1; k1 <= i__1; ++k1)
+        for (k1 = *k + 1; k1 <= nrow; ++k1)
         {
             if (idif[k1] > 0)
             {
@@ -765,8 +759,8 @@ int f7xact_(integer nrow, integer *imax, integer *idif,
     L90:
         --(*k);
 
-        i__1 = mm, i__2 = imax[*k];
-        m = ((i__1) <= (i__2) ? (i__1) : (i__2));
+        i__1 = imax[*k];
+        m = ((mm) <= (i__1) ? (mm) : (i__1));
         idif[*k] = m;
         mm -= m;
         if (mm > 0 && *k != 1)
@@ -838,6 +832,7 @@ L10:
     }
     return 0;
 }
+
 doublereal f9xact_(integer n, integer mm, integer *ir, doublereal *fact)
 {
 
@@ -932,8 +927,7 @@ int f3xact_(integer nrow, integer *irow, integer ncol,
     integer nst = 0;
     integer nitc = 0;
 
-    integer i__1;
-    doublereal d__1, d__2;
+    doublereal d__2;
 
     integer i, k;
     doublereal v;
@@ -943,6 +937,7 @@ int f3xact_(integer nrow, integer *irow, integer ncol,
     doublereal vmn;
     integer nrt, kyy, nc1s;
     logical xmin;
+
     --stv;
     --ist;
     --itc;
@@ -956,8 +951,7 @@ int f3xact_(integer nrow, integer *irow, integer ncol,
     --icol;
     --irow;
 
-    i__1 = ncol;
-    for (i = 0; i <= i__1; ++i)
+    for (i = 0; i <= ncol; ++i)
     {
         alen[i] = 0.f;
     }
@@ -971,8 +965,7 @@ int f3xact_(integer nrow, integer *irow, integer ncol,
         if (nrow > 0)
         {
             *dlp -= fact[icol[1]];
-            i__1 = ncol;
-            for (i = 2; i <= i__1; ++i)
+            for (i = 2; i <= ncol; ++i)
             {
                 *dlp -= fact[icol[i]];
             }
@@ -985,8 +978,7 @@ int f3xact_(integer nrow, integer *irow, integer ncol,
         if (ncol > 0)
         {
             *dlp = *dlp - fact[irow[1]] - fact[irow[2]];
-            i__1 = nrow;
-            for (i = 3; i <= i__1; ++i)
+            for (i = 3; i <= nrow; ++i)
             {
                 *dlp -= fact[irow[i]];
             }
@@ -1030,16 +1022,14 @@ int f3xact_(integer nrow, integer *irow, integer ncol,
         nro = nrow;
         nco = ncol;
 
-        i__1 = nrow;
-        for (i = 1; i <= i__1; ++i)
+        for (i = 1; i <= nrow; ++i)
         {
             iro[i] = irow[i];
         }
 
         ico[1] = icol[1];
         nt[1] = nn - ico[1];
-        i__1 = ncol;
-        for (i = 2; i <= i__1; ++i)
+        for (i = 2; i <= ncol; ++i)
         {
             ico[i] = icol[i];
             nt[i] = nt[i - 1] - ico[i];
@@ -1052,15 +1042,13 @@ int f3xact_(integer nrow, integer *irow, integer ncol,
 
         ico[1] = irow[1];
         nt[1] = nn - ico[1];
-        i__1 = nrow;
-        for (i = 2; i <= i__1; ++i)
+        for (i = 2; i <= nrow; ++i)
         {
             ico[i] = irow[i];
             nt[i] = nt[i - 1] - ico[i];
         }
 
-        i__1 = ncol;
-        for (i = 1; i <= i__1; ++i)
+        for (i = 1; i <= ncol; ++i)
         {
             iro[i] = icol[i];
         }
@@ -1142,8 +1130,7 @@ L120:
     {
 
         v = v + fact[ico[1] - lb[1]] + fact[ico[2] - lb[2]];
-        i__1 = nco;
-        for (i = 3; i <= i__1; ++i)
+        for (i = 3; i <= nco; ++i)
         {
             v += fact[ico[i] - lb[i]];
         }
@@ -1169,8 +1156,7 @@ L120:
     else
     {
 
-        i__1 = nco;
-        for (i = 1; i <= i__1; ++i)
+        for (i = 1; i <= nco; ++i)
         {
             it[i] = ico[i] - lb[i];
         }
@@ -1229,8 +1215,7 @@ L120:
 
         double dkyy = (double)kyy;
         double dkey = it[1] * dkyy + it[2];
-        i__1 = nco;
-        for (i = 3; i <= i__1; ++i)
+        for (i = 3; i <= nco; ++i)
         {
             dkey = it[i] + dkey * dkyy;
         }
@@ -1248,8 +1233,7 @@ L120:
         ipn = key % ldst + 1;
 
         ii = ks + ipn;
-        i__1 = ldst;
-        for (itp = ipn; itp <= i__1; ++itp)
+        for (itp = ipn; itp <= ldst; ++itp)
         {
             if (ist[ii] < 0)
             {
@@ -1263,8 +1247,7 @@ L120:
         }
 
         ii = ks + 1;
-        i__1 = ipn - 1;
-        for (itp = 1; itp <= i__1; ++itp)
+        for (itp = 1; itp < ipn; ++itp)
         {
             if (ist[ii] < 0)
             {
@@ -1290,8 +1273,8 @@ L120:
 
     L190:
 
-        d__1 = v, d__2 = stv[ii];
-        stv[ii] = ((d__1) <= (d__2) ? (d__1) : (d__2));
+        d__2 = stv[ii];
+        stv[ii] = ((v) <= (d__2) ? (v) : (d__2));
     }
     goto L110;
 
@@ -1313,8 +1296,7 @@ L200:
         ico[1] = key;
 
         nt[1] = nn - ico[1];
-        i__1 = nco;
-        for (i = 2; i <= i__1; ++i)
+        for (i = 2; i <= nco; ++i)
         {
             nt[i] = nt[i - 1] - ico[i];
         }
@@ -1349,8 +1331,8 @@ int f2xact_(integer nrow, integer ncol, doublereal *table,
     doublereal tol = 3.45254e-7;
     real emx = 1e30f;
 
-    integer table_dim1, table_offset, i__1, i__2;
-    doublereal d__1, d__2, d__3, d__4;
+    integer table_dim1, table_offset, i__1;
+    doublereal d__1, d__3, d__4;
 
     integer i, j, k, n, k1;
     doublereal dd, df;
@@ -1374,6 +1356,7 @@ int f2xact_(integer nrow, integer ncol, doublereal *table,
     integer ikstp;
     integer ikstp2;
     integer ifault;
+
     table_dim1 = *ldtabl;
     table_offset = 1 + table_dim1;
     table -= table_offset;
@@ -1392,6 +1375,7 @@ int f2xact_(integer nrow, integer ncol, doublereal *table,
     --key2;
     --iwk;
     --rwk;
+
     i__1 = 2 * ldkey;
     for (i = 1; i <= i__1; ++i)
     {
@@ -1444,12 +1428,10 @@ int f2xact_(integer nrow, integer ncol, doublereal *table,
     }
 
     ntot = 0;
-    i__1 = nrow;
-    for (i = 1; i <= i__1; ++i)
+    for (i = 1; i <= nrow; ++i)
     {
         iro[i] = 0;
-        i__2 = ncol;
-        for (j = 1; j <= i__2; ++j)
+        for (j = 1; j <= ncol; ++j)
         {
             if (table[i + j * table_dim1] < -1e-4)
             {
@@ -1469,12 +1451,10 @@ int f2xact_(integer nrow, integer ncol, doublereal *table,
         goto L9000;
     }
 
-    i__1 = ncol;
-    for (i = 1; i <= i__1; ++i)
+    for (i = 1; i <= ncol; ++i)
     {
         ico[i] = 0;
-        i__2 = nrow;
-        for (j = 1; j <= i__2; ++j)
+        for (j = 1; j <= nrow; ++j)
         {
             ico[i] += (int)(table[j + i * table_dim1]);
         }
@@ -1488,8 +1468,7 @@ int f2xact_(integer nrow, integer ncol, doublereal *table,
         nro = ncol;
         nco = nrow;
 
-        i__1 = nrow;
-        for (i = 1; i <= i__1; ++i)
+        for (i = 1; i <= nrow; ++i)
         {
             itmp = iro[i];
             if (i <= ncol)
@@ -1506,8 +1485,7 @@ int f2xact_(integer nrow, integer ncol, doublereal *table,
     }
 
     kyy[1] = 1;
-    i__1 = nro;
-    for (i = 2; i <= i__1; ++i)
+    for (i = 2; i <= nro; ++i)
     {
 
         if (iro[i - 1] + 1 <= imax / kyy[i - 1])
@@ -1545,8 +1523,7 @@ int f2xact_(integer nrow, integer ncol, doublereal *table,
     fact[0] = 0.;
     fact[1] = 0.;
     fact[2] = log(2.);
-    i__1 = ntot;
-    for (i = 3; i <= i__1; i += 2)
+    for (i = 3; i <= ntot; i += 2)
     {
         fact[i] = fact[i - 1] + log((doublereal)i);
         j = i + 1;
@@ -1558,12 +1535,10 @@ int f2xact_(integer nrow, integer ncol, doublereal *table,
 
     obs = tol;
     ntot = 0;
-    i__1 = nco;
-    for (j = 1; j <= i__1; ++j)
+    for (j = 1; j <= nco; ++j)
     {
         dd = 0.f;
-        i__2 = nro;
-        for (i = 1; i <= i__2; ++i)
+        for (i = 1; i <= nro; ++i)
         {
             if (nrow <= ncol)
             {
@@ -1605,8 +1580,7 @@ L110:
     kd = nro + 1;
     kmax = nro;
 
-    i__1 = nro;
-    for (i = 1; i <= i__1; ++i)
+    for (i = 1; i <= nro; ++i)
     {
         idif[i] = 0;
     }
@@ -1614,8 +1588,8 @@ L110:
 L130:
     --kd;
 
-    i__1 = n, i__2 = iro[kd];
-    ntot = ((i__1) <= (i__2) ? (i__1) : (i__2));
+    i__1 = iro[kd];
+    ntot = ((n) <= (i__1) ? (n) : (i__1));
     idif[kd] = ntot;
     if (idif[kmax] == 0)
     {
@@ -1634,15 +1608,13 @@ L130:
     k1 = k - 1;
     n = ico[kb];
     ntot = 0;
-    i__1 = nco;
-    for (i = kb + 1; i <= i__1; ++i)
+    for (i = kb + 1; i <= nco; ++i)
     {
         ntot += ico[i];
     }
 
 L150:
-    i__1 = nro;
-    for (i = 1; i <= i__1; ++i)
+    for (i = 1; i <= nro; ++i)
     {
         irn[i] = iro[i] - idif[i];
     }
@@ -1698,8 +1670,7 @@ L150:
         }
         else
         {
-            i__1 = nro;
-            for (j = 2; j <= i__1; ++j)
+            for (j = 2; j <= nro; ++j)
             {
                 i = j - 1;
                 ii = irn[j];
@@ -1717,8 +1688,7 @@ L150:
             }
         }
 
-        i__1 = nro;
-        for (i = 1; i <= i__1; ++i)
+        for (i = 1; i <= nro; ++i)
         {
             if (irn[i] != 0)
             {
@@ -1741,8 +1711,7 @@ L150:
     if (k1 > 1)
     {
         kval = irn[1] + irn[2] * kyy[2];
-        i__1 = nro;
-        for (i = 3; i <= i__1; ++i)
+        for (i = 3; i <= nro; ++i)
         {
             kval += irn[i] * kyy[i];
         }
@@ -1766,8 +1735,7 @@ L150:
             }
         }
 
-        i__1 = i - 1;
-        for (itp = 1; itp <= i__1; ++itp)
+        for (itp = 1; itp < i; ++itp)
         {
             ii = key2[itp];
             if (ii == kval)
@@ -1797,8 +1765,7 @@ L240:
     if (k1 > 1)
     {
         obs2 = obs - fact[ico[kb + 1]] - fact[ico[kb + 2]] - ddf;
-        i__1 = k1;
-        for (i = 3; i <= i__1; ++i)
+        for (i = 3; i <= k1; ++i)
         {
             obs2 -= fact[ico[kb + i]];
         }
@@ -1811,24 +1778,22 @@ L240:
             f3xact_(nro2, &irn[nrb], k1, &ico[kb + 1], &dlp[itp], ntot,
                     fact, &iwk[i31], &iwk[i32], &iwk[i33], &iwk[i34], &iwk[i35], &iwk[i36], &iwk[i37], &iwk[i38], &iwk[i39], &rwk[i310], &rwk[i311], tol);
 
-            d__1 = 0., d__2 = dlp[itp];
-            dlp[itp] = ((d__1) <= (d__2) ? (d__1) : (d__2));
+            d__1 = dlp[itp];
+            dlp[itp] = ((0.) <= (d__1) ? (0.) : (d__1));
 
             dsp[itp] = dspt;
             f4xact_(nro2, &irn[nrb], k1, &ico[kb + 1], &dsp[itp], fact, &iwk[i47], &iwk[i41], &iwk[i42], &iwk[i43], &iwk[i44], &iwk[i45], &iwk[i46], &rwk[i48], tol);
 
-            d__1 = 0., d__2 = dsp[itp] - dspt;
-            dsp[itp] = ((d__1) <= (d__2) ? (d__1) : (d__2));
+            d__1 = dsp[itp] - dspt;
+            dsp[itp] = ((0.) <= (d__1) ? (0.) : (d__1));
 
             if ((doublereal)(irn[nrb] * ico[kb + 1]) / (doublereal)ntot >
                 emn)
             {
                 ncell = 0.f;
-                i__1 = nro2;
-                for (i = 1; i <= i__1; ++i)
+                for (i = 1; i <= nro2; ++i)
                 {
-                    i__2 = k1;
-                    for (j = 1; j <= i__2; ++j)
+                    for (j = 1; j <= k1; ++j)
                     {
                         if ((doublereal)(irn[nrb + i - 1] * ico[kb + j]) >=
                             ntot * *expect)
@@ -1840,14 +1805,12 @@ L240:
                 if ((doublereal)(ncell * 100) >= k1 * nro2 * *percnt)
                 {
                     tmp = 0.f;
-                    i__1 = nro2;
-                    for (i = 1; i <= i__1; ++i)
+                    for (i = 1; i <= nro2; ++i)
                     {
                         tmp = tmp + fact[irn[nrb + i - 1]] - fact[irn[nrb + i - 1] - 1];
                     }
                     tmp *= k1 - 1;
-                    i__1 = k1;
-                    for (j = 1; j <= i__1; ++j)
+                    for (j = 1; j <= k1; ++j)
                     {
                         tmp += (nro2 - 1) * (fact[ico[kb + j]] - fact[ico[kb + j] - 1]);
                     }
@@ -1897,8 +1860,8 @@ L300:
         {
             df = (doublereal)((nro2 - 1) * (k1 - 1));
 
-            d__2 = 0., d__3 = tmp + (pastp + drn) * 2.;
-            d__1 = ((d__2) >= (d__3) ? (d__2) : (d__3)) / 2.;
+            d__3 = tmp + (pastp + drn) * 2.;
+            d__1 = ((0.) >= (d__3) ? (0.) : (d__3)) / 2.;
             d__4 = df / 2.;
             pv = 1.f - gammds_(d__1, d__4, &ifault);
             *pre += (doublereal)ifreq * exp(pastp + drn) * pv;
@@ -1906,8 +1869,7 @@ L300:
         else
         {
 
-            d__1 = pastp + ddf;
-            f5xact_(d__1, tol, &kval, &key[jkey], ldkey, &ipoin[jkey], &stp[jstp], ldstp, &ifrq[jstp], &ifrq[jstp2], &ifrq[jstp3], &ifrq[jstp4], &ifreq, &itop, ipsh);
+            f5xact_(pastp + ddf, tol, &kval, &key[jkey], ldkey, &ipoin[jkey], &stp[jstp], ldstp, &ifrq[jstp], &ifrq[jstp2], &ifrq[jstp3], &ifrq[jstp4], &ifreq, &itop, ipsh);
             ipsh = 0;
         }
     }
@@ -1992,6 +1954,7 @@ int fexact_(integer nrow, integer ncol, doublereal *table,
     integer ldstp;
     integer iwkpt;
     integer iwkmax;
+
     table_dim1 = ldtabl;
     table_offset = 1 + table_dim1;
     table -= table_offset;
@@ -2018,11 +1981,9 @@ int fexact_(integer nrow, integer ncol, doublereal *table,
         prterr_(&c__1, "NROW must be less than or equal to LDTABL.");
     }
     ntot = 0;
-    i__1 = nrow;
-    for (i = 1; i <= i__1; ++i)
+    for (i = 1; i <= nrow; ++i)
     {
-        i__2 = ncol;
-        for (j = 1; j <= i__2; ++j)
+        for (j = 1; j <= ncol; ++j)
         {
             if (table[i + j * table_dim1] < 0.)
             {
