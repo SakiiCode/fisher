@@ -9,9 +9,15 @@ mod asa159;
 mod asa643;
 mod math;
 
-macro_rules! idx {
-    ($arr:expr, $r:expr, $c:expr, $cols:expr) => {
-        $arr[$r * $cols + $c]
+macro_rules! get {
+    ($arr:ident, $r:expr, $c:expr, $cols:expr) => {
+        unsafe { *$arr.get_unchecked($r * $cols + $c) }
+    };
+}
+
+macro_rules! set {
+    ($arr:ident, $r:expr, $c:expr, $cols:expr, $val:expr) => {
+        unsafe { *$arr.get_unchecked_mut($r * $cols + $c) = $val }
     };
 }
 
@@ -23,29 +29,29 @@ fn fill(mat_new: &mut Vec<u32>, r_sum: &Vec<u32>, c_sum: &Vec<u32>, p_0: f64) ->
     for i in 0..r - 1 {
         let mut temp = r_sum[i];
         for j in 0..c - 1 {
-            temp -= idx!(mat_new, i, j, c);
+            temp -= get!(mat_new, i, j, c);
         }
-        idx!(mat_new, i, c - 1, c) = temp;
+        set!(mat_new, i, c - 1, c, temp);
     }
     for j in 0..c - 1 {
         let mut temp = c_sum[j];
         for i in 0..r - 1 {
-            temp -= idx!(mat_new, i, j, c);
+            temp -= get!(mat_new, i, j, c);
         }
-        idx!(mat_new, r - 1, j, c) = temp;
+        set!(mat_new, r - 1, j, c, temp);
     }
 
     let mut temp = r_sum[r - 1];
     for j in 0..c - 1 {
-        if temp < idx!(mat_new, r - 1, j, c) {
+        if temp < get!(mat_new, r - 1, j, c) {
             //println!();
             return 0.0;
         } else {
-            temp -= idx!(mat_new, r - 1, j, c);
+            temp -= get!(mat_new, r - 1, j, c);
         }
     }
 
-    idx!(mat_new, r - 1, c - 1, c) = temp;
+    set!(mat_new, r - 1, c - 1, c, temp);
     //print!("{:?} ", &mat_new);
 
     let mut p_1 = Quotient::new(r + c, mat_new.len() + 1);
@@ -80,18 +86,18 @@ fn _dfs(
     let mut max_2 = c_sum[yy];
 
     for j in 0..c {
-        max_1 -= idx!(mat_new, xx, j, c);
+        max_1 -= get!(mat_new, xx, j, c);
     }
 
     for i in 0..r {
-        max_2 -= idx!(mat_new, i, yy, c);
+        max_2 -= get!(mat_new, i, yy, c);
     }
 
     return (0..=min(max_1, max_2))
         .into_par_iter()
         .map(|k| {
             let mut mat_new2 = mat_new.clone();
-            idx!(mat_new2, xx, yy, c) = k;
+            set!(mat_new2, xx, yy, c, k);
             if xx + 2 == r && yy + 2 == c {
                 return fill(&mut mat_new2, r_sum, c_sum, p_0);
             } else if xx + 2 == r {
