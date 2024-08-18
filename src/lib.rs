@@ -1,5 +1,7 @@
+#![feature(portable_simd)]
 #![allow(clippy::needless_return)]
 #![allow(clippy::ptr_arg)]
+use fixedsize5x5::dfs_5x5;
 use lazy_static::lazy_static;
 use math::Quotient;
 use pyo3::prelude::*;
@@ -9,6 +11,7 @@ use std::{cmp::min, sync::Mutex, vec};
 
 mod asa159;
 mod asa643;
+mod fixedsize5x5;
 mod math;
 
 macro_rules! get {
@@ -56,12 +59,14 @@ fn fill(mat_new: &mut Vec<u32>, r_sum: &Vec<u32>, c_sum: &Vec<u32>, p_0: f64) ->
     set!(mat_new, r - 1, c - 1, c, temp);
     //print!("{:?} ", &mat_new);
 
-    let mut p_1 = Quotient::new(r + c, mat_new.len() + 1);
+    let n = r_sum.iter().sum();
+
+    let mut p_1 = Quotient::new(2 * n as usize, 2 * n as usize);
 
     p_1.mul_fact(r_sum);
     p_1.mul_fact(c_sum);
 
-    p_1.div_fact(&[r_sum.iter().sum(); 1]);
+    p_1.div_fact(&[n; 1]);
     p_1.div_fact(mat_new);
 
     let p_1_res = p_1.solve();
@@ -129,6 +134,52 @@ pub fn recursive(table: Vec<Vec<u32>>) -> PyResult<f64> {
     p_0.div_fact(&table.iter().flatten().map(|x| *x).collect::<Vec<u32>>());
 
     let p = _dfs(&mut mat, 0, 0, &row_sum, &col_sum, p_0.solve());
+
+    return Ok(p);
+}
+
+#[pyfunction]
+pub fn fixed5x5(table: Vec<Vec<u32>>) -> PyResult<f64> {
+    /*let row_sum: [u32; 4] = table.iter().map(|row| row.iter().sum()).collect();
+    let col_sum: [u32; 4] = (0..(table[0].len()))
+        .map(|index| table.iter().map(|row| row[index]).sum())
+        .collect();*/
+
+    let mut row_sum = [0; 5];
+    for i in 0..5 {
+        let mut sum = 0;
+        for j in 0..5 {
+            sum += table[i][j];
+        }
+        row_sum[i] = sum;
+    }
+
+    let mut col_sum = [0; 5];
+    for i in 0..5 {
+        let mut sum = 0;
+        for j in 0..5 {
+            sum += table[j][i];
+        }
+        col_sum[i] = sum;
+    }
+    let mut p_0 = Quotient::default();
+
+    p_0.mul_fact(&row_sum);
+    p_0.mul_fact(&col_sum);
+
+    p_0.div_fact(&[row_sum.iter().sum(); 1]);
+    p_0.div_fact(&table.iter().flatten().map(|x| *x).collect::<Vec<u32>>());
+
+    let mut seq = [0; 25];
+
+    let p = dfs_5x5(
+        &mut seq,
+        0,
+        0,
+        &row_sum.into(),
+        &col_sum.into(),
+        p_0.solve() + 0.00000001,
+    );
 
     return Ok(p);
 }
@@ -285,6 +336,7 @@ fn fisher(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(recursive, m)?)?;
     m.add_function(wrap_pyfunction!(sim, m)?)?;
     m.add_function(wrap_pyfunction!(exact, m)?)?;
+    m.add_function(wrap_pyfunction!(fixed5x5, m)?)?;
     Ok(())
 }
 
@@ -378,6 +430,20 @@ fn rec5x5() {
     let result = recursive(input).unwrap();
     dbg!(result);
     assert_eq!(result, 0.24678711559405725);
+}
+
+#[test]
+fn rec5x5_small() {
+    let input = vec![
+        vec![1, 0, 0, 0, 0],
+        vec![1, 1, 0, 1, 0],
+        vec![1, 1, 0, 0, 1],
+        vec![0, 0, 1, 2, 1],
+        vec![1, 1, 2, 1, 1],
+    ];
+    let output = recursive(input).unwrap();
+    dbg!(output);
+    assert_eq!(output, 0.9712771262351094);
 }
 
 #[test]
@@ -615,4 +681,32 @@ fn sim5x5() {
     let result = sim(input, 10000).unwrap();
     dbg!(result);
     assert!(float_cmp::approx_eq!(f64, result, 0.222, epsilon = 0.02));
+}
+
+#[test]
+fn fixed5x5_large() {
+    let input = vec![
+        vec![3, 1, 1, 1, 0],
+        vec![1, 4, 1, 0, 0],
+        vec![2, 1, 3, 2, 0],
+        vec![1, 1, 1, 2, 0],
+        vec![1, 1, 0, 0, 3],
+    ];
+    let output = fixed5x5(input).unwrap();
+    dbg!(output);
+    assert_eq!(output, 0.24678711559405725);
+}
+
+#[test]
+fn fixed5x5_small() {
+    let input = vec![
+        vec![1, 0, 0, 0, 0],
+        vec![1, 1, 0, 1, 0],
+        vec![1, 1, 0, 0, 1],
+        vec![0, 0, 1, 2, 1],
+        vec![1, 1, 2, 1, 1],
+    ];
+    let output = fixed5x5(input).unwrap();
+    dbg!(output);
+    assert_eq!(output, 0.9712771262351094);
 }
