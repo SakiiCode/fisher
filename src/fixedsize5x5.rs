@@ -26,7 +26,7 @@ fn fill_5x5(mat_new: &mut [u32; 16], r_sum: &[u32; 5], c_sum: &[u32; 5], p_0: f6
         let end = start + 4;
         r_vec.push(Simd::from_slice(&mat_new[start..end]));
     }
-    let mut r_vec_red: Simd<u32, 4> = Simd::from_slice(&c_sum[0..4]);
+    let mut r_vec_red: Simd<u32, 4> = Simd::from_slice(c_sum);
 
     let mut c_vec: Vec<Simd<u32, 4>> = Vec::with_capacity(c);
 
@@ -38,7 +38,7 @@ fn fill_5x5(mat_new: &mut [u32; 16], r_sum: &[u32; 5], c_sum: &[u32; 5], p_0: f6
         c_vec.push(Simd::from_array(arr));
     }
 
-    let mut c_vec_red: Simd<u32, 4> = Simd::from_slice(&r_sum[0..4]);
+    let mut c_vec_red: Simd<u32, 4> = Simd::from_slice(r_sum);
 
     for i in 0..c {
         c_vec_red.sub_assign(c_vec[i]);
@@ -70,10 +70,6 @@ fn fill_5x5(mat_new: &mut [u32; 16], r_sum: &[u32; 5], c_sum: &[u32; 5], p_0: f6
         p_1.div_fact(r_vec[i].as_array());
     }
     p_1.div_fact(r_vec_red.as_array());
-
-    /*for i in 0..c - 1 {
-        p_1.div_fact(c_vec[i].as_array());
-    }*/
 
     p_1.div_fact(c_vec_red.as_array());
 

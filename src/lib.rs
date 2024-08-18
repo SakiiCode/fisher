@@ -545,6 +545,20 @@ fn proc5x5() {
 }
 
 #[test]
+fn proc5x5_small() {
+    let input = vec![
+        vec![1, 0, 0, 0, 0],
+        vec![1, 1, 0, 1, 0],
+        vec![1, 1, 0, 0, 1],
+        vec![0, 0, 1, 2, 1],
+        vec![1, 1, 2, 1, 1],
+    ];
+    let output = exact(input, None).unwrap();
+    dbg!(output);
+    assert_eq!(output, 0.9712771262351105);
+}
+
+#[test]
 #[ignore]
 fn proc5x5_large() {
     let input = vec![
