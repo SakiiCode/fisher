@@ -1,5 +1,9 @@
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
-use std::{cmp::min, ops::SubAssign, simd::Simd};
+use std::{
+    cmp::min,
+    ops::SubAssign,
+    simd::{num::SimdUint, Simd},
+};
 
 use crate::math::Quotient;
 
@@ -48,14 +52,13 @@ fn fill_5x5(mat_new: &mut [u32; 16], r_sum: &[u32; 5], c_sum: &[u32; 5], p_0: f6
         r_vec_red.sub_assign(r_vec[i]);
     }
 
-    let mut reduced = r_sum[r];
-    for j in r_vec_red.as_array() {
-        if reduced < *j {
-            //println!("");
-            return 0.0;
-        } else {
-            reduced -= *j;
-        }
+    let mut r_last = r_sum[r];
+    let r_red_sum = r_vec_red.reduce_sum();
+    if r_last < r_red_sum {
+        println!("");
+        return 0.0;
+    } else {
+        r_last -= r_red_sum;
     }
 
     let n = r_sum.iter().sum();
@@ -73,7 +76,7 @@ fn fill_5x5(mat_new: &mut [u32; 16], r_sum: &[u32; 5], c_sum: &[u32; 5], p_0: f6
 
     p_1.div_fact(c_vec_red.as_array());
 
-    p_1.div_fact(&[reduced; 1]);
+    p_1.div_fact(&[r_last; 1]);
 
     let p_1_res = p_1.solve();
     if p_1_res <= p_0 {
