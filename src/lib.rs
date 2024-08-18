@@ -1,3 +1,5 @@
+#![allow(clippy::needless_return)]
+#![allow(clippy::ptr_arg)]
 use lazy_static::lazy_static;
 use math::Quotient;
 use pyo3::prelude::*;
@@ -109,7 +111,6 @@ fn _dfs(
         .sum();
 }
 
-/// Formats the sum of two numbers as string.
 #[pyfunction]
 pub fn recursive(table: Vec<Vec<u32>>) -> PyResult<f64> {
     let row_sum: Vec<u32> = table.iter().map(|row| row.iter().sum()).collect();
@@ -157,9 +158,9 @@ pub fn sim(table: Vec<Vec<u32>>, iterations: u32) -> PyResult<f64> {
     let statistic = find_statistic_r(&table, &fact);
 
     let test = generate(&row_sum_i, &col_sum_i, &fact);
-    if test.is_err() {
-        println!("{}", test.as_ref().unwrap_err().1);
-        return Ok(-f64::from(test.unwrap_err().0));
+    if let Err(error) = test {
+        println!("{}", error.1);
+        return Ok(-f64::from(error.0));
     }
 
     // STATISTIC <- -sum(lfactorial(x))
@@ -190,18 +191,17 @@ pub fn exact(table: Vec<Vec<u32>>, workspace: Option<u32>) -> PyResult<f64> {
 
     // seq needs to be column-major
     let mut seq: Vec<f64> = (0..(table[0].len()))
-        .map(|index| table.iter().map(move |row| row[index] as f64))
-        .flatten()
+        .flat_map(|index| table.iter().map(move |row| row[index] as f64))
         .collect();
 
-    let wsize;
-    if workspace.is_some() {
-        wsize = workspace.unwrap();
-    } else {
-        let sum: u32 = row_sum.iter().sum();
-        let exp = sum / 20;
-        wsize = 200 * 10u32.pow(exp.clamp(3, 6));
-    }
+    let wsize = match workspace {
+        Some(size) => size,
+        None => {
+            let sum: u32 = row_sum.iter().sum();
+            let exp = sum / 20;
+            200 * 10u32.pow(exp.clamp(3, 6))
+        }
+    };
     //dbg!(wsize);
 
     let result;
@@ -232,7 +232,7 @@ pub fn exact(table: Vec<Vec<u32>>, workspace: Option<u32>) -> PyResult<f64> {
         result = pre;
     }
     if code < 0 {
-        return Ok(f64::try_from(code).unwrap());
+        return Ok(f64::from(code));
     } else {
         return Ok(result);
     }
@@ -273,7 +273,7 @@ fn generate(
         col_sum,
         &mut 0,
         &mut seed,
-        &fact,
+        fact,
     );
 
     return result;
@@ -293,7 +293,7 @@ fn rec2x2() {
     let input = vec![vec![3, 4], vec![4, 2]];
     let output = recursive(input).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.5920745920745922);
+    assert_eq!(output, 0.5920745920745921);
 }
 
 #[test]
@@ -301,7 +301,7 @@ fn rec3x3() {
     let input = vec![vec![4, 1, 0], vec![1, 5, 0], vec![1, 1, 4]];
     let output = recursive(input).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.005293725881961175);
+    assert_eq!(output, 0.005293725881961177);
 }
 
 #[test]
@@ -314,7 +314,7 @@ fn rec4x4() {
     ];
     let output = recursive(input).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.01096124432190708);
+    assert_eq!(output, 0.010961244321907074);
 }
 
 #[test]
@@ -361,7 +361,7 @@ fn rec5x4() {
     ];
     let output = recursive(input).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.6388806191300103);
+    assert_eq!(output, 0.63888061913001);
 }
 
 #[test]

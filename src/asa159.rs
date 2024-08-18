@@ -1,3 +1,5 @@
+#![allow(clippy::needless_return)]
+
 /*
 fn i4_max(i1: i32, i2: i32) -> i32 {
     if i2 < i1 {
@@ -77,14 +79,12 @@ fn i4vec_sum(a: &Vec<i32>) -> i32 {
 }
 
 fn r8_uniform_01(seed: &mut i32) -> f64 {
-    let k;
-    let r;
-    k = *seed / 127773;
+    let k = *seed / 127773;
     *seed = 16807 * (*seed - k * 127773) - k * 2836;
     if *seed < 0 {
-        *seed = *seed + 2147483647;
+        *seed += 2147483647;
     }
-    r = *seed as f64 * 4.656612875E-10f64;
+    let r = *seed as f64 * 4.656612875E-10f64;
     return r;
 }
 
@@ -172,11 +172,11 @@ pub fn rcont2(
         nrowtl = nrowt[l as usize];
         ia = nrowtl;
         ic = jc;
-        jc = jc - nrowtl;
+        jc -= nrowtl;
         for m in 0..(ncol - 1) {
             id = jwork[m as usize];
             ie = ic;
-            ic = ic - id;
+            ic -= id;
             ib = ie - ia;
             ii = ib - id;
             if ie == 0 {
@@ -219,9 +219,9 @@ pub fn rcont2(
                         if j == 0 {
                             lsp = 1;
                         } else {
-                            nlm = nlm + 1;
+                            nlm += 1;
                             x = x * j as f64 / (nlm * (ii + nlm)) as f64;
-                            sumprb = sumprb + x;
+                            sumprb += x;
                             if r <= sumprb {
                                 done1 = 1;
                                 break;
@@ -234,9 +234,9 @@ pub fn rcont2(
                                 lsm = 1;
                                 break;
                             } else {
-                                nll = nll - 1;
+                                nll -= 1;
                                 y = y * j as f64 / ((id - nll) * (ia - nll)) as f64;
-                                sumprb = sumprb + y;
+                                sumprb += y;
                                 if r <= sumprb {
                                     nlm = nll;
                                     done2 = 1;
@@ -257,11 +257,11 @@ pub fn rcont2(
                         break;
                     }
                     r = r8_uniform_01(seed);
-                    r = sumprb * r;
+                    r *= sumprb;
                 }
                 matrix[(l + m * nrow) as usize] = nlm;
-                ia = ia - nlm;
-                jwork[m as usize] = jwork[m as usize] - nlm;
+                ia -= nlm;
+                jwork[m as usize] -= nlm;
             }
         }
         matrix[(l + (ncol - 1) * nrow) as usize] = ia;
