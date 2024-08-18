@@ -56,12 +56,14 @@ fn fill(mat_new: &mut Vec<u32>, r_sum: &Vec<u32>, c_sum: &Vec<u32>, p_0: f64) ->
     set!(mat_new, r - 1, c - 1, c, temp);
     //print!("{:?} ", &mat_new);
 
-    let mut p_1 = Quotient::new(r + c, mat_new.len() + 1);
+    let n = r_sum.iter().sum();
+
+    let mut p_1 = Quotient::new(2 * n as usize, 2 * n as usize);
 
     p_1.mul_fact(r_sum);
     p_1.mul_fact(c_sum);
 
-    p_1.div_fact(&[r_sum.iter().sum(); 1]);
+    p_1.div_fact(&[n; 1]);
     p_1.div_fact(mat_new);
 
     let p_1_res = p_1.solve();
