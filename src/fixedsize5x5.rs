@@ -2,7 +2,7 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::{
     cmp::min,
     ops::SubAssign,
-    simd::{num::SimdUint, Simd},
+    simd::{num::SimdUint, LaneCount, Simd, SupportedLaneCount},
 };
 
 use crate::math::Quotient;
@@ -19,30 +19,38 @@ macro_rules! set {
     };
 }
 
-fn fill_5x5(mat_new: &mut [u32; 16], r_sum: &[u32; 5], c_sum: &[u32; 5], p_0: f64) -> f64 {
+fn fill<const N: usize>(
+    mat_new: &mut [u32; N * N],
+    r_sum: &[u32; N + 1],
+    c_sum: &[u32; N + 1],
+    p_0: f64,
+) -> f64
+where
+    LaneCount<N>: SupportedLaneCount,
+{
     let r = r_sum.len() - 1;
     let c = c_sum.len() - 1;
 
-    let mut r_vec: Vec<Simd<u32, 4>> = Vec::with_capacity(r);
+    let mut r_vec: Vec<Simd<u32, N>> = Vec::with_capacity(r);
 
     for i in 0..r {
-        let start = i * 4;
-        let end = start + 4;
+        let start = i * N;
+        let end = start + N;
         r_vec.push(Simd::from_slice(&mat_new[start..end]));
     }
-    let mut r_vec_red: Simd<u32, 4> = Simd::from_slice(c_sum);
+    let mut r_vec_red: Simd<u32, N> = Simd::from_slice(c_sum);
 
-    let mut c_vec: Vec<Simd<u32, 4>> = Vec::with_capacity(c);
+    let mut c_vec: Vec<Simd<u32, N>> = Vec::with_capacity(c);
 
     for i in 0..c {
-        let mut arr = [0; 4];
+        let mut arr = [0; N];
         for j in 0..r {
             arr[j] = mat_new[j * (c) + i];
         }
         c_vec.push(Simd::from_array(arr));
     }
 
-    let mut c_vec_red: Simd<u32, 4> = Simd::from_slice(r_sum);
+    let mut c_vec_red: Simd<u32, N> = Simd::from_slice(r_sum);
 
     for i in 0..c {
         c_vec_red.sub_assign(c_vec[i]);
@@ -55,7 +63,7 @@ fn fill_5x5(mat_new: &mut [u32; 16], r_sum: &[u32; 5], c_sum: &[u32; 5], p_0: f6
     let mut r_last = r_sum[r];
     let r_red_sum = r_vec_red.reduce_sum();
     if r_last < r_red_sum {
-        println!("");
+        //println!("");
         return 0.0;
     } else {
         r_last -= r_red_sum;
@@ -88,14 +96,17 @@ fn fill_5x5(mat_new: &mut [u32; 16], r_sum: &[u32; 5], c_sum: &[u32; 5], p_0: f6
     }
 }
 
-pub fn dfs_5x5(
-    mat_new: &mut [u32; 16],
+pub fn dfs<const N: usize>(
+    mat_new: &mut [u32; N * N],
     xx: usize,
     yy: usize,
-    r_sum: &[u32; 5],
-    c_sum: &[u32; 5],
+    r_sum: &[u32; N + 1],
+    c_sum: &[u32; N + 1],
     p_0: f64,
-) -> f64 {
+) -> f64
+where
+    LaneCount<N>: SupportedLaneCount,
+{
     let r = r_sum.len();
     let c = c_sum.len();
     let mut max_1 = r_sum[xx];
@@ -115,11 +126,11 @@ pub fn dfs_5x5(
             let mut mat_new2 = mat_new.clone();
             set!(mat_new2, xx, yy, c - 1, k);
             if xx + 2 == r && yy + 2 == c {
-                return fill_5x5(&mut mat_new2, r_sum, c_sum, p_0);
+                return fill::<N>(&mut mat_new2, r_sum, c_sum, p_0);
             } else if xx + 2 == r {
-                return dfs_5x5(&mut mat_new2, 0, yy + 1, r_sum, c_sum, p_0);
+                return dfs::<N>(&mut mat_new2, 0, yy + 1, r_sum, c_sum, p_0);
             } else {
-                return dfs_5x5(&mut mat_new2, xx + 1, yy, r_sum, c_sum, p_0);
+                return dfs::<N>(&mut mat_new2, xx + 1, yy, r_sum, c_sum, p_0);
             }
         })
         .sum();

@@ -1,7 +1,8 @@
+#![feature(generic_const_exprs)]
 #![feature(portable_simd)]
 #![allow(clippy::needless_return)]
 #![allow(clippy::ptr_arg)]
-use fixedsize5x5::dfs_5x5;
+use fixedsize5x5::dfs;
 use lazy_static::lazy_static;
 use math::Quotient;
 use pyo3::prelude::*;
@@ -139,29 +140,17 @@ pub fn recursive(table: Vec<Vec<u32>>) -> PyResult<f64> {
 }
 
 #[pyfunction]
-pub fn fixed5x5(table: Vec<Vec<u32>>) -> PyResult<f64> {
-    /*let row_sum: [u32; 4] = table.iter().map(|row| row.iter().sum()).collect();
-    let col_sum: [u32; 4] = (0..(table[0].len()))
+pub fn fixed(table: Vec<Vec<u32>>) -> PyResult<f64> {
+    let mut row_sum: Vec<u32> = table.iter().map(|row| row.iter().sum()).collect();
+    let mut col_sum: Vec<u32> = (0..(table[0].len()))
         .map(|index| table.iter().map(|row| row[index]).sum())
-        .collect();*/
+        .collect();
 
-    let mut row_sum = [0; 5];
-    for i in 0..5 {
-        let mut sum = 0;
-        for j in 0..5 {
-            sum += table[i][j];
-        }
-        row_sum[i] = sum;
+    if table.len() != table[0].len() {
+        println!("fisher.fixed() can only be used with square matrices yet!");
+        return Ok(-1.0);
     }
 
-    let mut col_sum = [0; 5];
-    for i in 0..5 {
-        let mut sum = 0;
-        for j in 0..5 {
-            sum += table[j][i];
-        }
-        col_sum[i] = sum;
-    }
     let mut p_0 = Quotient::default();
 
     p_0.mul_fact(&row_sum);
@@ -170,16 +159,73 @@ pub fn fixed5x5(table: Vec<Vec<u32>>) -> PyResult<f64> {
     p_0.div_fact(&[row_sum.iter().sum(); 1]);
     p_0.div_fact(&table.iter().flatten().map(|x| *x).collect::<Vec<u32>>());
 
-    let mut seq = [0; 16];
+    let stat = p_0.solve() + 0.00000001;
 
-    let p = dfs_5x5(
-        &mut seq,
-        0,
-        0,
-        &row_sum.into(),
-        &col_sum.into(),
-        p_0.solve() + 0.00000001,
-    );
+    let lanes: usize = match table.len() {
+        1 => {
+            println!("Invalid table size!");
+            return Ok(-1.0);
+        }
+        2 => 1,
+        3 => 2,
+        4 | 5 => 4,
+        6..=9 => 8,
+        10..=17 => 16,
+        _ => {
+            println!("fisher.fixed() can only be used with up to 16x16 matrices!");
+            return Ok(-1.0);
+        }
+    };
+
+    row_sum.resize(lanes + 1, 0);
+    col_sum.resize(lanes + 1, 0);
+
+    let p = match lanes {
+        1 => dfs::<1>(
+            &mut [0; 1],
+            0,
+            0,
+            &row_sum.try_into().unwrap(),
+            &col_sum.try_into().unwrap(),
+            stat,
+        ),
+        2 => dfs::<2>(
+            &mut [0; 4],
+            0,
+            0,
+            &row_sum.try_into().unwrap(),
+            &col_sum.try_into().unwrap(),
+            stat,
+        ),
+        4 => dfs::<4>(
+            &mut [0; 16],
+            0,
+            0,
+            &row_sum.try_into().unwrap(),
+            &col_sum.try_into().unwrap(),
+            stat,
+        ),
+        8 => dfs::<8>(
+            &mut [0; 64],
+            0,
+            0,
+            &row_sum.try_into().unwrap(),
+            &col_sum.try_into().unwrap(),
+            stat,
+        ),
+        16 => dfs::<16>(
+            &mut [0; 256],
+            0,
+            0,
+            &row_sum.try_into().unwrap(),
+            &col_sum.try_into().unwrap(),
+            stat,
+        ),
+        _ => {
+            println!("Error in matching lane count. This should never happen");
+            return Ok(-1.0);
+        }
+    };
 
     return Ok(p);
 }
@@ -336,7 +382,7 @@ fn fisher(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(recursive, m)?)?;
     m.add_function(wrap_pyfunction!(sim, m)?)?;
     m.add_function(wrap_pyfunction!(exact, m)?)?;
-    m.add_function(wrap_pyfunction!(fixed5x5, m)?)?;
+    m.add_function(wrap_pyfunction!(fixed, m)?)?;
     Ok(())
 }
 
@@ -359,10 +405,11 @@ fn rec3x3() {
 #[test]
 fn rec4x4() {
     let input = vec![
-        vec![4, 1, 0, 1],
-        vec![1, 5, 0, 0],
-        vec![1, 1, 4, 2],
-        vec![1, 1, 0, 3],
+        vec![4, 1, 0, 1, 0],
+        vec![1, 5, 0, 0, 0],
+        vec![1, 1, 4, 2, 0],
+        vec![1, 1, 0, 3, 0],
+        vec![0, 0, 0, 0, 0],
     ];
     let output = recursive(input).unwrap();
     dbg!(output);
@@ -698,6 +745,40 @@ fn sim5x5() {
 }
 
 #[test]
+fn fixed2x2() {
+    let input = vec![vec![3, 4], vec![4, 2]];
+    let output = fixed(input).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.5920745920745918,
+        epsilon = 0.000001
+    ));
+}
+
+#[test]
+fn fixed3x3() {
+    let input = vec![vec![4, 1, 0], vec![1, 5, 0], vec![1, 1, 4]];
+    let output = fixed(input).unwrap();
+    dbg!(output);
+    assert_eq!(output, 0.005293725881961177);
+}
+
+#[test]
+fn fixed4x4() {
+    let input = vec![
+        vec![4, 1, 0, 1],
+        vec![1, 5, 0, 0],
+        vec![1, 1, 4, 2],
+        vec![1, 1, 0, 3],
+    ];
+    let output = fixed(input).unwrap();
+    dbg!(output);
+    assert_eq!(output, 0.010961244321907074);
+}
+
+#[test]
 fn fixed5x5_large() {
     let input = vec![
         vec![3, 1, 1, 1, 0],
@@ -706,7 +787,7 @@ fn fixed5x5_large() {
         vec![1, 1, 1, 2, 0],
         vec![1, 1, 0, 0, 3],
     ];
-    let output = fixed5x5(input).unwrap();
+    let output = fixed(input).unwrap();
     dbg!(output);
     assert_eq!(output, 0.24678711559405725);
 }
@@ -720,7 +801,7 @@ fn fixed5x5_small() {
         vec![0, 0, 1, 2, 1],
         vec![1, 1, 2, 1, 1],
     ];
-    let output = fixed5x5(input).unwrap();
+    let output = fixed(input).unwrap();
     dbg!(output);
     assert_eq!(output, 0.9712771262351094);
 }
