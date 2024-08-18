@@ -15,14 +15,14 @@ macro_rules! set {
     };
 }
 
-fn fill_5x5(mat_new: &mut [u32; 25], r_sum: &[u32; 5], c_sum: &[u32; 5], p_0: f64) -> f64 {
+fn fill_5x5(mat_new: &mut [u32; 16], r_sum: &[u32; 5], c_sum: &[u32; 5], p_0: f64) -> f64 {
     let r = r_sum.len();
     let c = c_sum.len();
 
     let mut r_vec: Vec<Simd<u32, 4>> = Vec::with_capacity(r);
 
     for i in 0..r - 1 {
-        let start = i * 5;
+        let start = i * 4;
         let end = start + 4;
         r_vec.push(Simd::from_slice(&mat_new[start..end]));
     }
@@ -33,7 +33,7 @@ fn fill_5x5(mat_new: &mut [u32; 25], r_sum: &[u32; 5], c_sum: &[u32; 5], p_0: f6
     for i in 0..c - 1 {
         let mut arr = [0; 4];
         for j in 0..r - 1 {
-            arr[j] = mat_new[j * c + i];
+            arr[j] = mat_new[j * (c - 1) + i];
         }
         c_vec.push(Simd::from_array(arr));
     }
@@ -90,7 +90,7 @@ fn fill_5x5(mat_new: &mut [u32; 25], r_sum: &[u32; 5], c_sum: &[u32; 5], p_0: f6
 }
 
 pub fn dfs_5x5(
-    mat_new: &mut [u32; 25],
+    mat_new: &mut [u32; 16],
     xx: usize,
     yy: usize,
     r_sum: &[u32; 5],
@@ -102,19 +102,19 @@ pub fn dfs_5x5(
     let mut max_1 = r_sum[xx];
     let mut max_2 = c_sum[yy];
 
-    for j in 0..c {
-        max_1 -= get!(mat_new, xx, j, c);
+    for j in 0..c - 1 {
+        max_1 -= get!(mat_new, xx, j, c - 1);
     }
 
-    for i in 0..r {
-        max_2 -= get!(mat_new, i, yy, c);
+    for i in 0..r - 1 {
+        max_2 -= get!(mat_new, i, yy, c - 1);
     }
 
     return (0..=min(max_1, max_2))
         .into_par_iter()
         .map(|k| {
             let mut mat_new2 = mat_new.clone();
-            set!(mat_new2, xx, yy, c, k);
+            set!(mat_new2, xx, yy, c - 1, k);
             if xx + 2 == r && yy + 2 == c {
                 return fill_5x5(&mut mat_new2, r_sum, c_sum, p_0);
             } else if xx + 2 == r {

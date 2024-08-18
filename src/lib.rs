@@ -170,7 +170,7 @@ pub fn fixed5x5(table: Vec<Vec<u32>>) -> PyResult<f64> {
     p_0.div_fact(&[row_sum.iter().sum(); 1]);
     p_0.div_fact(&table.iter().flatten().map(|x| *x).collect::<Vec<u32>>());
 
-    let mut seq = [0; 25];
+    let mut seq = [0; 16];
 
     let p = dfs_5x5(
         &mut seq,
