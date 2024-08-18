@@ -16,12 +16,12 @@ macro_rules! set {
 }
 
 fn fill_5x5(mat_new: &mut [u32; 16], r_sum: &[u32; 5], c_sum: &[u32; 5], p_0: f64) -> f64 {
-    let r = r_sum.len();
-    let c = c_sum.len();
+    let r = r_sum.len() - 1;
+    let c = c_sum.len() - 1;
 
     let mut r_vec: Vec<Simd<u32, 4>> = Vec::with_capacity(r);
 
-    for i in 0..r - 1 {
+    for i in 0..r {
         let start = i * 4;
         let end = start + 4;
         r_vec.push(Simd::from_slice(&mat_new[start..end]));
@@ -30,25 +30,25 @@ fn fill_5x5(mat_new: &mut [u32; 16], r_sum: &[u32; 5], c_sum: &[u32; 5], p_0: f6
 
     let mut c_vec: Vec<Simd<u32, 4>> = Vec::with_capacity(c);
 
-    for i in 0..c - 1 {
+    for i in 0..c {
         let mut arr = [0; 4];
-        for j in 0..r - 1 {
-            arr[j] = mat_new[j * (c - 1) + i];
+        for j in 0..r {
+            arr[j] = mat_new[j * (c) + i];
         }
         c_vec.push(Simd::from_array(arr));
     }
 
     let mut c_vec_red: Simd<u32, 4> = Simd::from_slice(&r_sum[0..4]);
 
-    for i in 0..c - 1 {
+    for i in 0..c {
         c_vec_red.sub_assign(c_vec[i]);
     }
 
-    for i in 0..r - 1 {
+    for i in 0..r {
         r_vec_red.sub_assign(r_vec[i]);
     }
 
-    let mut reduced = r_sum[r - 1];
+    let mut reduced = r_sum[r];
     for j in r_vec_red.as_array() {
         if reduced < *j {
             //println!("");
@@ -66,7 +66,7 @@ fn fill_5x5(mat_new: &mut [u32; 16], r_sum: &[u32; 5], c_sum: &[u32; 5], p_0: f6
     p_1.mul_fact(c_sum);
 
     p_1.div_fact(&[n; 1]);
-    for i in 0..r - 1 {
+    for i in 0..r {
         p_1.div_fact(r_vec[i].as_array());
     }
     p_1.div_fact(r_vec_red.as_array());
