@@ -43,17 +43,17 @@ fn fill(mat_new: &mut Vec<u32>, r_sum: &Vec<u32>, c_sum: &Vec<u32>, p_0: f64) ->
         set!(mat_new, r - 1, j, c, temp);
     }
 
-    let mut temp = r_sum[r - 1];
+    let temp = r_sum[r - 1];
+    let mut sum = 0;
     for j in 0..c - 1 {
-        if temp < get!(mat_new, r - 1, j, c) {
-            //println!();
-            return 0.0;
-        } else {
-            temp -= get!(mat_new, r - 1, j, c);
-        }
+        sum += get!(mat_new, r - 1, j, c);
+    }
+    if temp < sum {
+        //println!();
+        return 0.0;
     }
 
-    set!(mat_new, r - 1, c - 1, c, temp);
+    set!(mat_new, r - 1, c - 1, c, temp - sum);
     //print!("{:?} ", &mat_new);
 
     let n = r_sum.iter().sum();
@@ -67,7 +67,7 @@ fn fill(mat_new: &mut Vec<u32>, r_sum: &Vec<u32>, c_sum: &Vec<u32>, p_0: f64) ->
     p_1.div_fact(mat_new);
 
     let p_1_res = p_1.solve();
-    if p_1_res <= p_0 + 0.00000001 {
+    if p_1_res <= p_0 {
         //println!(" p={}", p_1_res);
         return p_1_res;
     } else {
@@ -86,8 +86,12 @@ fn _dfs(
 ) -> f64 {
     let r = r_sum.len();
     let c = c_sum.len();
-    let mut max_1 = r_sum[xx];
-    let mut max_2 = c_sum[yy];
+    let mut max_1;
+    let mut max_2;
+    unsafe {
+        max_1 = *r_sum.get_unchecked(xx);
+        max_2 = *c_sum.get_unchecked(yy);
+    }
 
     for j in 0..c {
         max_1 -= get!(mat_new, xx, j, c);
@@ -130,7 +134,7 @@ pub fn recursive(table: Vec<Vec<u32>>) -> PyResult<f64> {
     p_0.div_fact(&[row_sum.iter().sum(); 1]);
     p_0.div_fact(&table.iter().flatten().map(|x| *x).collect::<Vec<u32>>());
 
-    let p = _dfs(&mut mat, 0, 0, &row_sum, &col_sum, p_0.solve());
+    let p = _dfs(&mut mat, 0, 0, &row_sum, &col_sum, p_0.solve() + 0.00000001);
 
     return Ok(p);
 }
@@ -157,7 +161,7 @@ pub fn sim(table: Vec<Vec<u32>>, iterations: u32) -> PyResult<f64> {
 
     let nrow = row_sum.len();
     let ncol = col_sum.len();
-    let statistic = find_statistic_r(&table, &fact);
+    let statistic = find_statistic_r(&table, &fact) + 0.00000001;
 
     let test = generate(&row_sum_i, &col_sum_i, &fact);
     if let Err(error) = test {
@@ -170,7 +174,7 @@ pub fn sim(table: Vec<Vec<u32>>, iterations: u32) -> PyResult<f64> {
         .into_par_iter()
         .map(|_| generate(&row_sum_i, &col_sum_i, &fact))
         .map(|table| find_statistic_c(&table.unwrap(), nrow, ncol, &fact))
-        .filter(|ans| *ans <= statistic + 0.00000001)
+        .filter(|ans| *ans <= statistic)
         .count() as f64;
 
     // PVAL <- (1 + sum(tmp <= STATISTIC/almost.1)) / (B + 1)
