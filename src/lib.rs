@@ -27,7 +27,7 @@ macro_rules! set {
     };
 }
 
-fn fill(mat_new: &mut Vec<u32>, r_sum: &Vec<u32>, c_sum: &Vec<u32>, p_0: f64) -> f64 {
+fn fill(mat_new: &mut Vec<i32>, r_sum: &Vec<i32>, c_sum: &Vec<i32>, p_0: f64) -> f64 {
     let r = r_sum.len();
     let c = c_sum.len();
     //print!("{:?} -> ", &mat_new);
@@ -81,11 +81,11 @@ fn fill(mat_new: &mut Vec<u32>, r_sum: &Vec<u32>, c_sum: &Vec<u32>, p_0: f64) ->
 }
 
 fn _dfs(
-    mat_new: &mut Vec<u32>,
+    mat_new: &mut Vec<i32>,
     xx: usize,
     yy: usize,
-    r_sum: &Vec<u32>,
-    c_sum: &Vec<u32>,
+    r_sum: &Vec<i32>,
+    c_sum: &Vec<i32>,
     p_0: f64,
 ) -> f64 {
     let r = r_sum.len();
@@ -118,9 +118,9 @@ fn _dfs(
 }
 
 #[pyfunction]
-pub fn recursive(table: Vec<Vec<u32>>) -> PyResult<f64> {
-    let row_sum: Vec<u32> = table.iter().map(|row| row.iter().sum()).collect();
-    let col_sum: Vec<u32> = (0..(table[0].len()))
+pub fn recursive(table: Vec<Vec<i32>>) -> PyResult<f64> {
+    let row_sum: Vec<i32> = table.iter().map(|row| row.iter().sum()).collect();
+    let col_sum: Vec<i32> = (0..(table[0].len()))
         .map(|index| table.iter().map(|row| row[index]).sum())
         .collect();
 
@@ -132,7 +132,7 @@ pub fn recursive(table: Vec<Vec<u32>>) -> PyResult<f64> {
     p_0.mul_fact(&col_sum);
 
     p_0.div_fact(&[row_sum.iter().sum(); 1]);
-    p_0.div_fact(&table.iter().flatten().map(|x| *x).collect::<Vec<u32>>());
+    p_0.div_fact(&table.iter().flatten().map(|x| *x).collect::<Vec<i32>>());
 
     let p = _dfs(&mut mat, 0, 0, &row_sum, &col_sum, p_0.solve());
 
@@ -140,9 +140,9 @@ pub fn recursive(table: Vec<Vec<u32>>) -> PyResult<f64> {
 }
 
 #[pyfunction]
-pub fn fixed(table: Vec<Vec<u32>>) -> PyResult<f64> {
-    let mut row_sum: Vec<u32> = table.iter().map(|row| row.iter().sum()).collect();
-    let mut col_sum: Vec<u32> = (0..(table[0].len()))
+pub fn fixed(table: Vec<Vec<i32>>) -> PyResult<f64> {
+    let mut row_sum: Vec<i32> = table.iter().map(|row| row.iter().sum()).collect();
+    let mut col_sum: Vec<i32> = (0..(table[0].len()))
         .map(|index| table.iter().map(|row| row[index]).sum())
         .collect();
 
@@ -157,7 +157,7 @@ pub fn fixed(table: Vec<Vec<u32>>) -> PyResult<f64> {
     p_0.mul_fact(&col_sum);
 
     p_0.div_fact(&[row_sum.iter().sum(); 1]);
-    p_0.div_fact(&table.iter().flatten().map(|x| *x).collect::<Vec<u32>>());
+    p_0.div_fact(&table.iter().flatten().map(|x| *x).collect::<Vec<i32>>());
 
     let stat = p_0.solve() + 0.00000001;
 
@@ -231,13 +231,13 @@ pub fn fixed(table: Vec<Vec<u32>>) -> PyResult<f64> {
 }
 
 #[pyfunction]
-pub fn sim(table: Vec<Vec<u32>>, iterations: u32) -> PyResult<f64> {
-    let row_sum: Vec<u32> = table.iter().map(|row| row.iter().sum()).collect();
-    let col_sum: Vec<u32> = (0..(table[0].len()))
+pub fn sim(table: Vec<Vec<i32>>, iterations: i32) -> PyResult<f64> {
+    let row_sum: Vec<i32> = table.iter().map(|row| row.iter().sum()).collect();
+    let col_sum: Vec<i32> = (0..(table[0].len()))
         .map(|index| table.iter().map(|row| row[index]).sum())
         .collect();
 
-    let n = row_sum.iter().sum::<u32>().try_into().unwrap();
+    let n = row_sum.iter().sum::<i32>().try_into().unwrap();
 
     let mut fact = vec![0.0; n + 1];
     fact[0] = 0.0;
@@ -280,9 +280,9 @@ lazy_static! {
 
 #[pyfunction]
 #[pyo3(signature = (table, workspace=None))]
-pub fn exact(table: Vec<Vec<u32>>, workspace: Option<u32>) -> PyResult<f64> {
-    let row_sum: Vec<u32> = table.iter().map(|row| row.iter().sum()).collect();
-    let col_sum: Vec<u32> = (0..(table[0].len()))
+pub fn exact(table: Vec<Vec<i32>>, workspace: Option<i32>) -> PyResult<f64> {
+    let row_sum: Vec<i32> = table.iter().map(|row| row.iter().sum()).collect();
+    let col_sum: Vec<i32> = (0..(table[0].len()))
         .map(|index| table.iter().map(|row| row[index]).sum())
         .collect();
 
@@ -294,9 +294,9 @@ pub fn exact(table: Vec<Vec<u32>>, workspace: Option<u32>) -> PyResult<f64> {
     let wsize = match workspace {
         Some(size) => size,
         None => {
-            let sum: u32 = row_sum.iter().sum();
+            let sum: u32 = row_sum.iter().sum::<i32>() as u32;
             let exp = sum / 20;
-            200 * 10u32.pow(exp.clamp(3, 6))
+            (200 * 10i32.pow(exp.clamp(3, 6))).into()
         }
     };
     //dbg!(wsize);
@@ -314,10 +314,10 @@ pub fn exact(table: Vec<Vec<u32>>, workspace: Option<u32>) -> PyResult<f64> {
         let mut pre = 0.0;
         let ws = wsize.try_into().unwrap();
         code = asa643::fexact_(
-            nrow,
-            ncol,
+            nrow.into(),
+            ncol.into(),
             seq.as_mut_ptr(),
-            nrow,
+            nrow.into(),
             &mut expect,
             &mut percnt,
             &mut emin,
@@ -345,7 +345,7 @@ fn find_statistic_c(table: &Vec<i32>, nrow: usize, ncol: usize, fact: &Vec<f64>)
     return ans;
 }
 
-fn find_statistic_r(table: &Vec<Vec<u32>>, fact: &Vec<f64>) -> f64 {
+fn find_statistic_r(table: &Vec<Vec<i32>>, fact: &Vec<f64>) -> f64 {
     let mut ans = 0.0;
     for row in table {
         for cell in row {

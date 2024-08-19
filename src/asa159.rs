@@ -82,7 +82,7 @@ fn r8_uniform_01(seed: &mut i32) -> f64 {
     let k = *seed / 127773;
     *seed = 16807 * (*seed - k * 127773) - k * 2836;
     if *seed < 0 {
-        *seed += 2147483647;
+        *seed += i32::MAX;
     }
     let r = *seed as f64 * 4.656612875E-10f64;
     return r;

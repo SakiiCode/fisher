@@ -12,7 +12,7 @@ impl Quotient {
         }
     }
 
-    pub fn mul_fact(&mut self, arr: &[u32]) {
+    pub fn mul_fact(&mut self, arr: &[i32]) {
         for x in arr {
             for i in 2..=*x {
                 self.numerator.push(i.into());
@@ -20,7 +20,7 @@ impl Quotient {
         }
     }
 
-    pub fn div_fact(&mut self, arr: &[u32]) {
+    pub fn div_fact(&mut self, arr: &[i32]) {
         for x in arr {
             for i in 2..=*x {
                 self.denominator.push(i.into());

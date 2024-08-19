@@ -2,7 +2,7 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::{
     cmp::min,
     ops::SubAssign,
-    simd::{num::SimdUint, LaneCount, Simd, SupportedLaneCount},
+    simd::{num::SimdInt, LaneCount, Simd, SupportedLaneCount},
 };
 
 use crate::math::Quotient;
@@ -20,21 +20,21 @@ macro_rules! set {
 }
 
 fn fill<const N: usize>(
-    mat_new: &mut [u32; N * N],
-    r_sum: &[u32; N + 1],
-    c_sum: &[u32; N + 1],
+    mat_new: &mut [i32; N * N],
+    r_sum: &[i32; N + 1],
+    c_sum: &[i32; N + 1],
     p_0: f64,
 ) -> f64
 where
     LaneCount<N>: SupportedLaneCount,
 {
-    let mut r_vec: Vec<Simd<u32, N>> = Vec::with_capacity(N);
+    let mut r_vec: Vec<Simd<i32, N>> = Vec::with_capacity(N);
 
     for i in 0..N {
         let start = i * N;
         r_vec.push(Simd::from_slice(&mat_new[start..]));
     }
-    let mut r_vec_red: Simd<u32, N> = Simd::from_slice(c_sum);
+    let mut r_vec_red: Simd<i32, N> = Simd::from_slice(c_sum);
 
     for i in 0..N {
         r_vec_red.sub_assign(r_vec[i]);
@@ -49,7 +49,7 @@ where
     }
     r_last -= r_red_sum;
 
-    let mut c_vec: Vec<Simd<u32, N>> = Vec::with_capacity(N);
+    let mut c_vec: Vec<Simd<i32, N>> = Vec::with_capacity(N);
 
     for i in 0..N {
         let mut arr = [0; N];
@@ -59,7 +59,7 @@ where
         c_vec.push(Simd::from_array(arr));
     }
 
-    let mut c_vec_red: Simd<u32, N> = Simd::from_slice(r_sum);
+    let mut c_vec_red: Simd<i32, N> = Simd::from_slice(r_sum);
 
     for i in 0..N {
         c_vec_red.sub_assign(c_vec[i]);
@@ -93,11 +93,11 @@ where
 }
 
 pub fn dfs<const N: usize>(
-    mat_new: &mut [u32; N * N],
+    mat_new: &mut [i32; N * N],
     xx: usize,
     yy: usize,
-    r_sum: &[u32; N + 1],
-    c_sum: &[u32; N + 1],
+    r_sum: &[i32; N + 1],
+    c_sum: &[i32; N + 1],
     p_0: f64,
 ) -> f64
 where
