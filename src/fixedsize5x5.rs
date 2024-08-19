@@ -28,23 +28,20 @@ fn fill<const N: usize>(
 where
     LaneCount<N>: SupportedLaneCount,
 {
-    let r = r_sum.len() - 1;
-    let c = c_sum.len() - 1;
+    let mut r_vec: Vec<Simd<u32, N>> = Vec::with_capacity(N);
 
-    let mut r_vec: Vec<Simd<u32, N>> = Vec::with_capacity(r);
-
-    for i in 0..r {
+    for i in 0..N {
         let start = i * N;
         r_vec.push(Simd::from_slice(&mat_new[start..]));
     }
     let mut r_vec_red: Simd<u32, N> = Simd::from_slice(c_sum);
 
-    for i in 0..r {
+    for i in 0..N {
         r_vec_red.sub_assign(r_vec[i]);
     }
 
     let r_red_sum = r_vec_red.reduce_sum();
-    let mut r_last = r_sum[r];
+    let mut r_last = r_sum[N];
 
     if r_last < r_red_sum {
         //println!("");
@@ -52,19 +49,19 @@ where
     }
     r_last -= r_red_sum;
 
-    let mut c_vec: Vec<Simd<u32, N>> = Vec::with_capacity(c);
+    let mut c_vec: Vec<Simd<u32, N>> = Vec::with_capacity(N);
 
-    for i in 0..c {
+    for i in 0..N {
         let mut arr = [0; N];
-        for j in 0..r {
-            arr[j] = mat_new[j * (c) + i];
+        for j in 0..N {
+            arr[j] = mat_new[j * N + i];
         }
         c_vec.push(Simd::from_array(arr));
     }
 
     let mut c_vec_red: Simd<u32, N> = Simd::from_slice(r_sum);
 
-    for i in 0..c {
+    for i in 0..N {
         c_vec_red.sub_assign(c_vec[i]);
     }
 
@@ -76,7 +73,7 @@ where
     p_1.mul_fact(c_sum);
 
     p_1.div_fact(&[n; 1]);
-    for i in 0..r {
+    for i in 0..N {
         p_1.div_fact(r_vec[i].as_array());
     }
     p_1.div_fact(r_vec_red.as_array());
