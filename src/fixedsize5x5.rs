@@ -65,9 +65,8 @@ where
     if r_last < r_red_sum {
         //println!("");
         return 0.0;
-    } else {
-        r_last -= r_red_sum;
     }
+    r_last -= r_red_sum;
 
     let n = r_sum.iter().sum();
 
@@ -89,10 +88,10 @@ where
     let p_1_res = p_1.solve();
     if p_1_res <= p_0 {
         //println!(" p={}", p_1_res);
-        return p_1_res;
+        p_1_res
     } else {
         //println!(" p=0.0");
-        return 0.0;
+        0.0
     }
 }
 

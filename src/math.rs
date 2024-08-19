@@ -1,4 +1,3 @@
-#![allow(clippy::comparison_chain)]
 #[derive(Default)]
 pub struct Quotient {
     numerator: Vec<f64>,
