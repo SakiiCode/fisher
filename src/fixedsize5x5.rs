@@ -35,10 +35,22 @@ where
 
     for i in 0..r {
         let start = i * N;
-        let end = start + N;
-        r_vec.push(Simd::from_slice(&mat_new[start..end]));
+        r_vec.push(Simd::from_slice(&mat_new[start..]));
     }
     let mut r_vec_red: Simd<u32, N> = Simd::from_slice(c_sum);
+
+    for i in 0..r {
+        r_vec_red.sub_assign(r_vec[i]);
+    }
+
+    let r_red_sum = r_vec_red.reduce_sum();
+    let mut r_last = r_sum[r];
+
+    if r_last < r_red_sum {
+        //println!("");
+        return 0.0;
+    }
+    r_last -= r_red_sum;
 
     let mut c_vec: Vec<Simd<u32, N>> = Vec::with_capacity(c);
 
@@ -55,18 +67,6 @@ where
     for i in 0..c {
         c_vec_red.sub_assign(c_vec[i]);
     }
-
-    for i in 0..r {
-        r_vec_red.sub_assign(r_vec[i]);
-    }
-
-    let mut r_last = r_sum[r];
-    let r_red_sum = r_vec_red.reduce_sum();
-    if r_last < r_red_sum {
-        //println!("");
-        return 0.0;
-    }
-    r_last -= r_red_sum;
 
     let n = r_sum.iter().sum();
 
