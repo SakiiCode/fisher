@@ -22,19 +22,11 @@ macro_rules! set {
         unsafe { *$arr.get_unchecked_mut($r * $cols + $c) = $val }
     };
 }
-
 fn fill(mat_new: &mut Vec<u32>, r_sum: &Vec<u32>, c_sum: &Vec<u32>, p_0: f64) -> f64 {
     let r = r_sum.len();
     let c = c_sum.len();
     //print!("{:?} -> ", &mat_new);
 
-    for i in 0..r - 1 {
-        let mut temp = r_sum[i];
-        for j in 0..c - 1 {
-            temp -= get!(mat_new, i, j, c);
-        }
-        set!(mat_new, i, c - 1, c, temp);
-    }
     for j in 0..c - 1 {
         let mut temp = c_sum[j];
         for i in 0..r - 1 {
@@ -55,6 +47,14 @@ fn fill(mat_new: &mut Vec<u32>, r_sum: &Vec<u32>, c_sum: &Vec<u32>, p_0: f64) ->
 
     set!(mat_new, r - 1, c - 1, c, temp - sum);
     //print!("{:?} ", &mat_new);
+
+    for i in 0..r - 1 {
+        let mut temp = r_sum[i];
+        for j in 0..c - 1 {
+            temp -= get!(mat_new, i, j, c);
+        }
+        set!(mat_new, i, c - 1, c, temp);
+    }
 
     let n = r_sum.iter().sum();
 
