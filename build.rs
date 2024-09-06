@@ -3,11 +3,16 @@ extern crate cc;
 fn main() {
     //println!(r"cargo:rustc-link-lib=static=f2c");
 
-    cc::Build::new()
-        .file("src/asa643.c")
-        .flag("-ffast-math")
-        .flag("-Wno-unused-result")
-        .flag("-Wno-clobbered")
-        //.flag(if cfg!(windows) { "/Od" } else { "-O0" })
-        .compile("fexact");
+    let mut build_common = cc::Build::new();
+    build_common.file("src/asa643.c");
+
+    if cfg!(windows) {
+        build_common.flag("/fp:fast").compile("fexact");
+    } else {
+        build_common
+            .flag("-ffast-math")
+            .flag("-Wno-unused-result")
+            .flag("-Wno-clobbered")
+            .compile("fexact");
+    }
 }
