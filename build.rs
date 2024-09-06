@@ -6,6 +6,8 @@ fn main() {
     cc::Build::new()
         .file("src/asa643.c")
         .flag("-ffast-math")
+        .flag("-Wno-unused-result")
+        .flag("-Wno-clobbered")
         //.flag(if cfg!(windows) { "/Od" } else { "-O0" })
         .compile("fexact");
 }

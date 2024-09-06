@@ -933,7 +933,7 @@ int f3xact_(integer nrow, integer *irow, integer ncol,
     doublereal v;
     integer n11, n12, ii, nn, ks, ic1, ic2, nc1, nn1, nr1, nco;
     doublereal val;
-    integer nct, ipn, irl, key, lev, itp, nro;
+    integer nct, ipn, irl, key = 0, lev, itp, nro;
     doublereal vmn;
     integer nrt, kyy, nc1s;
     logical xmin;
@@ -1343,14 +1343,14 @@ int f2xact_(integer nrow, integer ncol, doublereal *table,
     doublereal ddf;
     integer nco, nrb;
     doublereal emn, drn, dro, obs;
-    integer ipn, ipo, itp, nro;
-    doublereal tmp, obs2, obs3;
+    integer ipn, ipo, itp = 0, nro;
+    doublereal tmp = 0, obs2, obs3;
     integer nro2, kval, kmax, jkey, last;
     logical ipsh;
     integer itmp;
     doublereal dspt;
     integer itop, jstp, ntot, jstp2, jstp3, jstp4, iflag, ncell, ifreq;
-    logical chisq;
+    logical chisq = 0;
     integer ikkey;
     doublereal pastp;
     integer ikstp;
