@@ -1,5 +1,9 @@
 #![allow(clippy::needless_return)]
 #![allow(clippy::ptr_arg)]
+
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 use lazy_static::lazy_static;
 use math::Quotient;
 use pyo3::prelude::*;
@@ -621,4 +625,23 @@ fn sim5x5() {
     let result = sim(input, 10000).unwrap();
     dbg!(result);
     assert!(float_cmp::approx_eq!(f64, result, 0.222, epsilon = 0.02));
+}
+
+#[test]
+fn sim5x5_large() {
+    let input = vec![
+        vec![8, 8, 3, 5, 2],
+        vec![5, 3, 3, 0, 2],
+        vec![8, 9, 9, 0, 0],
+        vec![9, 4, 5, 3, 2],
+        vec![4, 6, 6, 1, 0],
+    ];
+    let result = sim(input, 10000000).unwrap();
+    dbg!(result);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        result,
+        0.26314046636138944,
+        epsilon = 0.001
+    ));
 }
