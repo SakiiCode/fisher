@@ -1,9 +1,11 @@
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::{
+    cell::RefCell,
     cmp::min,
     ops::SubAssign,
     simd::{num::SimdInt, LaneCount, Simd, SupportedLaneCount},
 };
+use thread_local::ThreadLocal;
 
 use crate::math::Quotient;
 
@@ -24,16 +26,27 @@ fn fill<const N: usize>(
     r_sum: &[i32; N + 1],
     c_sum: &[i32; N + 1],
     p_0: f64,
+    tl: &ThreadLocal<Box<RefCell<Quotient>>>,
 ) -> f64
 where
     LaneCount<N>: SupportedLaneCount,
 {
+    /*
     let mut r_vec: Vec<Simd<i32, N>> = Vec::with_capacity(N);
 
     for i in 0..N {
         let start = i * N;
         r_vec.push(Simd::from_slice(&mat_new[start..]));
     }
+    */
+
+    let r_vec: Box<[Simd<i32, N>]> = (0..N)
+        .map(|i| {
+            let start = i * N;
+            Simd::from_slice(&mat_new[start..])
+        })
+        .collect();
+
     let mut r_vec_red: Simd<i32, N> = Simd::from_slice(c_sum);
 
     for i in 0..N {
@@ -49,6 +62,7 @@ where
     }
     r_last -= r_red_sum;
 
+    /*
     let mut c_vec: Vec<Simd<i32, N>> = Vec::with_capacity(N);
 
     for i in 0..N {
@@ -58,6 +72,17 @@ where
         }
         c_vec.push(Simd::from_array(arr));
     }
+    */
+
+    let c_vec: Box<[Simd<i32, N>]> = (0..N)
+        .map(|i| {
+            let mut arr = [0; N];
+            for j in 0..N {
+                arr[j] = mat_new[j * N + i];
+            }
+            Simd::from_array(arr)
+        })
+        .collect();
 
     let mut c_vec_red: Simd<i32, N> = Simd::from_slice(r_sum);
 
@@ -67,7 +92,12 @@ where
 
     let n = r_sum.iter().sum();
 
-    let mut p_1 = Quotient::new(2 * n as usize, 2 * n as usize);
+    //let mut p_1 = Quotient::new(2 * n as usize, 2 * n as usize);
+    let p_1_ref =
+        tl.get_or(|| Box::new(RefCell::new(Quotient::new(2 * n as usize, 2 * n as usize))));
+
+    let mut p_1 = (p_1_ref).borrow_mut();
+    p_1.clear();
 
     p_1.mul_fact(r_sum);
     p_1.mul_fact(c_sum);
@@ -99,6 +129,7 @@ pub fn dfs<const N: usize>(
     r_sum: &[i32; N + 1],
     c_sum: &[i32; N + 1],
     p_0: f64,
+    tl: &ThreadLocal<Box<RefCell<Quotient>>>,
 ) -> f64
 where
     LaneCount<N>: SupportedLaneCount,
@@ -108,6 +139,7 @@ where
     let mut max_1 = r_sum[xx];
     let mut max_2 = c_sum[yy];
 
+    // last row and col is empty, loops are needed
     for j in 0..c - 1 {
         max_1 -= get!(mat_new, xx, j, c - 1);
     }
@@ -122,11 +154,11 @@ where
             let mut mat_new2 = mat_new.clone();
             set!(mat_new2, xx, yy, c - 1, k);
             if xx + 2 == r && yy + 2 == c {
-                return fill::<N>(&mut mat_new2, r_sum, c_sum, p_0);
+                return fill::<N>(&mut mat_new2, r_sum, c_sum, p_0, tl);
             } else if xx + 2 == r {
-                return dfs::<N>(&mut mat_new2, 0, yy + 1, r_sum, c_sum, p_0);
+                return dfs::<N>(&mut mat_new2, 0, yy + 1, r_sum, c_sum, p_0, tl);
             } else {
-                return dfs::<N>(&mut mat_new2, xx + 1, yy, r_sum, c_sum, p_0);
+                return dfs::<N>(&mut mat_new2, xx + 1, yy, r_sum, c_sum, p_0, tl);
             }
         })
         .sum();

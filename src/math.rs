@@ -51,6 +51,11 @@ impl Quotient {
         }
         return result;
     }
+
+    pub fn clear(&mut self) {
+        self.denominator.clear();
+        self.numerator.clear();
+    }
 }
 /*
 #[test]
