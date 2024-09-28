@@ -806,10 +806,10 @@ fn fixed2x2() {
 
 #[test]
 fn fixed3x3() {
-    let input = vec![vec![32, 10, 20], vec![12, 25, 18], vec![11, 17, 14]];
+    let input = vec![vec![32, 10, 20], vec![20, 25, 18], vec![11, 17, 14]];
     let output = fixed(input).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.0014878318795286459);
+    assert_eq!(output, 0.011074529608901276);
 }
 
 #[test]
