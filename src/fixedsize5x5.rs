@@ -120,19 +120,30 @@ where
     }
 
     // r_sum is N+1 length, SIMD cannot be used
-    let n = r_sum.iter().sum();
+    let n: i32 = r_sum.iter().sum();
 
     //let mut p_1 = Quotient::new(2 * n as usize, 2 * n as usize);
-    let p_1_ref =
-        tl.get_or(|| Box::new(RefCell::new(Quotient::new(2 * n as usize, 2 * n as usize))));
+    let p_1_ref = tl.get_or(|| {
+        let mut init_n = Vec::with_capacity(2 * (N + 1));
+        let init_d = vec![n];
+        init_n.extend_from_slice(r_sum);
+        init_n.extend_from_slice(c_sum);
+        Box::new(RefCell::new(Quotient::new(
+            2 * n as usize,
+            2 * n as usize,
+            &init_n,
+            &init_d,
+        )))
+    });
 
     let mut p_1 = (p_1_ref).borrow_mut();
-    p_1.clear();
+    // "1" numbers don't get added so they are subtracted
+    p_1.clear(2 * n as usize - 2 * N, n as usize - 1);
 
-    p_1.mul_fact(r_sum);
-    p_1.mul_fact(c_sum);
+    //p_1.mul_fact(r_sum);
+    //p_1.mul_fact(c_sum);
 
-    p_1.div_fact(&[n; 1]);
+    //p_1.div_fact(&[n; 1]);
     //foreach is slower here
     for i in 0..N {
         p_1.div_fact(r_vec[i].as_array());

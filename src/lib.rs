@@ -68,7 +68,7 @@ fn fill(mat_new: &mut Vec<i32>, r_sum: &Vec<i32>, c_sum: &Vec<i32>, p_0: f64) ->
 
     let n = r_sum.iter().sum();
 
-    let mut p_1 = Quotient::new(2 * n as usize, 2 * n as usize);
+    let mut p_1 = Quotient::new(2 * n as usize, 2 * n as usize, &[], &[]);
 
     p_1.mul_fact(r_sum);
     p_1.mul_fact(c_sum);
