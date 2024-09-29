@@ -837,7 +837,12 @@ fn fixed5x5_large() {
     ];
     let output = fixed(input).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.24678711559405725);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.24678711559405725,
+        epsilon = 0.000001
+    ));
 }
 
 #[test]

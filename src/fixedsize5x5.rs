@@ -42,14 +42,23 @@ where
 
     let mut r_vec_red: Simd<i32, N> = Simd::from_slice(c_sum);
 
+    /*
     let r_vec: Box<[Simd<i32, N>]> = (0..N)
-        .map(|i| {
-            let start = i * N;
-            let row_simd = Simd::from_slice(&mat_new[start..]);
-            r_vec_red.sub_assign(row_simd);
-            row_simd
-        })
-        .collect();
+    .map(|i| {
+        let start = i * N;
+        let row_simd = Simd::from_slice(&mat_new[start..]);
+        r_vec_red.sub_assign(row_simd);
+        row_simd
+    })
+    .collect();
+    */
+
+    let mut r_vec = [Simd::from_array([0; N]); N];
+    for i in 0..N {
+        let start = i * N;
+        r_vec[i] = Simd::from_slice(&mat_new[start..]);
+        r_vec_red.sub_assign(r_vec[i]);
+    }
 
     let r_red_sum = r_vec_red.reduce_sum();
     let mut r_last = r_sum[N];
