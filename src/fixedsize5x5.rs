@@ -206,18 +206,24 @@ where
         max_2 -= get!(mat_new, i, yy, c - 1);
     }*/
 
-    return (0..=min(max_1, max_2))
-        .into_par_iter()
-        .map(|k| {
-            let mut mat_new2 = mat_new.clone();
-            set!(mat_new2, xx, yy, c - 1, k);
-            if xx + 2 == r && yy + 2 == c {
-                return fill::<N>(&mut mat_new2, r_sum, c_sum, p_0, tl);
-            } else if xx + 2 == r {
-                return dfs::<N>(&mut mat_new2, 0, yy + 1, r_sum, c_sum, p_0, tl);
-            } else {
-                return dfs::<N>(&mut mat_new2, xx + 1, yy, r_sum, c_sum, p_0, tl);
-            }
-        })
-        .sum();
+    let next_cycle = |k| {
+        let mut mat_new2 = mat_new.clone();
+        set!(mat_new2, xx, yy, c - 1, k);
+        if xx + 2 == r && yy + 2 == c {
+            return fill::<N>(&mut mat_new2, r_sum, c_sum, p_0, tl);
+        } else if xx + 2 == r {
+            return dfs::<N>(&mut mat_new2, 0, yy + 1, r_sum, c_sum, p_0, tl);
+        } else {
+            return dfs::<N>(&mut mat_new2, xx + 1, yy, r_sum, c_sum, p_0, tl);
+        }
+    };
+
+    if xx + 2 != r {
+        return (0..=min(max_1, max_2))
+            .into_par_iter()
+            .map(next_cycle)
+            .sum();
+    } else {
+        return (0..=min(max_1, max_2)).map(next_cycle).sum();
+    }
 }

@@ -43,6 +43,9 @@ impl Quotient {
     #[inline(never)]
     pub fn div_fact(&mut self, arr: &[i32]) {
         for x in arr {
+            // for i in 2..=*x {
+            //     self.denominator.push(i);
+            // }
             self.denominator.extend(2..=*x);
             // let idx = *x as usize;
             // if idx < MAX_FACTORIAL {
