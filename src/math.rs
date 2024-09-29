@@ -1,8 +1,13 @@
 #[derive(Default)]
 pub struct Quotient {
-    numerator: Vec<f64>,
-    denominator: Vec<f64>,
+    numerator: Vec<i32>,
+    denominator: Vec<i32>,
 }
+
+const MAX_FACTORIAL: usize = 13;
+const FACTORIALS: [i32; MAX_FACTORIAL] = [
+    1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600,
+];
 
 impl Quotient {
     pub fn new(nsize: usize, dsize: usize) -> Quotient {
@@ -12,18 +17,26 @@ impl Quotient {
         }
     }
 
+    #[inline(never)]
     pub fn mul_fact(&mut self, arr: &[i32]) {
         for x in arr {
-            for i in 2..=*x {
-                self.numerator.push(i.into());
+            let idx = *x as usize;
+            if idx < MAX_FACTORIAL {
+                self.numerator.push(FACTORIALS[idx]);
+            } else {
+                self.numerator.extend(2..=*x);
             }
         }
     }
 
+    #[inline(never)]
     pub fn div_fact(&mut self, arr: &[i32]) {
         for x in arr {
-            for i in 2..=*x {
-                self.denominator.push(i.into());
+            let idx = *x as usize;
+            if idx < MAX_FACTORIAL {
+                self.denominator.push(FACTORIALS[idx]);
+            } else {
+                self.denominator.extend(2..=*x);
             }
         }
     }
@@ -35,24 +48,26 @@ impl Quotient {
         let n = self.numerator.len();
         let d = self.denominator.len();
 
-        let len = usize::min(n, d);
+        //let len = usize::min(n, d);
+        let len = if n < d { n } else { d };
 
         for i in 0..len {
-            result *= self.numerator[i] / self.denominator[i];
+            result *= self.numerator[i] as f64 / self.denominator[i] as f64;
         }
 
         if n > d {
             for i in d..n {
-                result *= self.numerator[i];
+                result *= self.numerator[i] as f64;
             }
         } else if n < d {
             for i in n..d {
-                result /= self.denominator[i];
+                result /= self.denominator[i] as f64;
             }
         }
         return result;
     }
 
+    #[inline(never)]
     pub fn clear(&mut self) {
         self.denominator.clear();
         self.numerator.clear();
