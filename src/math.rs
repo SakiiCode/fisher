@@ -1,7 +1,7 @@
 #[derive(Default)]
 pub struct Quotient {
-    numerator: Vec<i32>,
-    denominator: Vec<i32>,
+    numerator: Vec<f64>,
+    denominator: Vec<f64>,
     initial_n: usize,
     initial_d: usize,
 }
@@ -29,7 +29,7 @@ impl Quotient {
     #[inline(never)]
     pub fn mul_fact(&mut self, arr: &[i32]) {
         for x in arr {
-            self.numerator.extend(2..=*x);
+            self.numerator.extend((2..=*x).map(|x| x as f64));
             // let idx = *x as usize;
             // if idx < MAX_FACTORIAL {
             //     self.numerator.push(FACTORIALS[idx]);
@@ -46,7 +46,7 @@ impl Quotient {
             // for i in 2..=*x {
             //     self.denominator.push(i);
             // }
-            self.denominator.extend(2..=*x);
+            self.denominator.extend((2..=*x).map(|x| x as f64));
             // let idx = *x as usize;
             // if idx < MAX_FACTORIAL {
             //     self.denominator.push(FACTORIALS[idx]);
@@ -68,16 +68,16 @@ impl Quotient {
         let len = if n < d { n } else { d };
 
         for i in 0..len {
-            result *= self.numerator[i] as f64 / self.denominator[i] as f64;
+            result *= self.numerator[i] / self.denominator[i];
         }
 
         if n > d {
             for i in d..n {
-                result *= self.numerator[i] as f64;
+                result *= self.numerator[i];
             }
         } else if n < d {
             for i in n..d {
-                result /= self.denominator[i] as f64;
+                result /= self.denominator[i];
             }
         }
         return result;
