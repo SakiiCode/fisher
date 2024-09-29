@@ -138,7 +138,7 @@ where
 
     let mut p_1 = (p_1_ref).borrow_mut();
     // "1" numbers don't get added so they are subtracted
-    p_1.clear(2 * n as usize - 2 * N, n as usize - 1);
+    p_1.clear();
 
     //p_1.mul_fact(r_sum);
     //p_1.mul_fact(c_sum);
