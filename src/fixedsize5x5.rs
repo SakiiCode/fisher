@@ -21,6 +21,7 @@ macro_rules! set {
     };
 }
 
+#[inline(never)]
 fn fill<const N: usize>(
     mat_new: &mut [i32; N * N],
     r_sum: &[i32; N + 1],

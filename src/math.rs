@@ -28,6 +28,7 @@ impl Quotient {
         }
     }
 
+    #[inline(never)]
     pub fn solve(&mut self) -> f64 {
         let mut result = 1.0;
 
