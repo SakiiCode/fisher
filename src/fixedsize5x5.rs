@@ -213,7 +213,7 @@ where
         }
     };
 
-    if xx + 2 != r {
+    if yy == 0 {
         return (0..=min(max_1, max_2))
             .into_par_iter()
             .map(next_cycle)

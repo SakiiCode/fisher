@@ -36,7 +36,7 @@ macro_rules! set {
 fn fill(mat_new: &mut Vec<i32>, r_sum: &Vec<i32>, c_sum: &Vec<i32>, p_0: f64) -> f64 {
     let r = r_sum.len();
     let c = c_sum.len();
-    //print!("{:?} -> ", &mat_new);
+    print!("{:?} -> ", &mat_new);
 
     for i in 0..r - 1 {
         let mut temp = r_sum[i];
@@ -56,7 +56,7 @@ fn fill(mat_new: &mut Vec<i32>, r_sum: &Vec<i32>, c_sum: &Vec<i32>, p_0: f64) ->
     let mut temp = r_sum[r - 1];
     for j in 0..c - 1 {
         if temp < get!(mat_new, r - 1, j, c) {
-            //println!();
+            println!();
             return 0.0;
         } else {
             temp -= get!(mat_new, r - 1, j, c);
@@ -64,7 +64,7 @@ fn fill(mat_new: &mut Vec<i32>, r_sum: &Vec<i32>, c_sum: &Vec<i32>, p_0: f64) ->
     }
 
     set!(mat_new, r - 1, c - 1, c, temp);
-    //print!("{:?} ", &mat_new);
+    print!("{:?} ", &mat_new);
 
     let n = r_sum.iter().sum::<i32>();
 
@@ -78,10 +78,10 @@ fn fill(mat_new: &mut Vec<i32>, r_sum: &Vec<i32>, c_sum: &Vec<i32>, p_0: f64) ->
 
     let p_1_res = p_1.solve();
     if p_1_res <= p_0 + 0.00000001 {
-        //println!(" p={}", p_1_res);
+        println!(" p={}", p_1_res);
         return p_1_res;
     } else {
-        //println!(" p=0.0");
+        println!(" p={p_1_res} (DISCARDED)");
         return 0.0;
     }
 }
@@ -108,7 +108,7 @@ fn _dfs(
     }
 
     return (0..=min(max_1, max_2))
-        .into_par_iter()
+        //.into_par_iter()
         .map(|k| {
             let mut mat_new2 = mat_new.clone();
             set!(mat_new2, xx, yy, c, k);
@@ -429,11 +429,10 @@ fn rec3x3_large() {
 #[test]
 fn rec4x4() {
     let input = vec![
-        vec![4, 1, 0, 1, 0],
-        vec![1, 5, 0, 0, 0],
-        vec![1, 1, 4, 2, 0],
-        vec![1, 1, 0, 3, 0],
-        vec![0, 0, 0, 0, 0],
+        vec![4, 1, 0, 1],
+        vec![1, 5, 0, 0],
+        vec![1, 1, 4, 2],
+        vec![1, 1, 0, 3],
     ];
     let output = recursive(input).unwrap();
     dbg!(output);
@@ -865,5 +864,5 @@ fn fixed5x5_small() {
     ];
     let output = fixed(input).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.9712771262351094);
+    assert_eq!(output, 0.9712771262351092);
 }
