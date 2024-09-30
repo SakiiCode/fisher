@@ -9,11 +9,11 @@ use thread_local::ThreadLocal;
 
 use crate::math::Quotient;
 
-macro_rules! get {
+/*macro_rules! get {
     ($arr:ident, $r:expr, $c:expr, $cols:expr) => {
         unsafe { *$arr.get_unchecked($r * $cols + $c) }
     };
-}
+}*/
 
 macro_rules! set {
     ($arr:ident, $r:expr, $c:expr, $cols:expr, $val:expr) => {
@@ -128,16 +128,10 @@ where
         let init_d = vec![n];
         init_n.extend_from_slice(r_sum);
         init_n.extend_from_slice(c_sum);
-        Box::new(RefCell::new(Quotient::new(
-            2 * n as usize,
-            2 * n as usize,
-            &init_n,
-            &init_d,
-        )))
+        Box::new(RefCell::new(Quotient::new(n as usize, &init_n, &init_d)))
     });
 
     let mut p_1 = (p_1_ref).borrow_mut();
-    // "1" numbers don't get added so they are subtracted
     p_1.clear();
 
     //p_1.mul_fact(r_sum);
@@ -145,9 +139,10 @@ where
 
     //p_1.div_fact(&[n; 1]);
     //foreach is slower here
-    for i in 0..N {
+    /*for i in 0..N {
         p_1.div_fact(r_vec[i].as_array());
-    }
+    }*/
+    p_1.div_fact(mat_new);
     p_1.div_fact(r_vec_red.as_array());
 
     p_1.div_fact(c_vec_red.as_array());

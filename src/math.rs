@@ -1,9 +1,10 @@
-#[derive(Default)]
 pub struct Quotient {
-    numerator: Vec<f64>,
-    denominator: Vec<f64>,
+    container: Box<[f64]>,
+    size: usize,
     initial_n: usize,
     initial_d: usize,
+    n_idx: usize,
+    d_idx: usize,
 }
 
 // const MAX_FACTORIAL: usize = 13;
@@ -12,24 +13,33 @@ pub struct Quotient {
 // ];
 
 impl Quotient {
-    pub fn new(size_n: usize, size_d: usize, init_n: &[i32], init_d: &[i32]) -> Quotient {
-        let mut result = Quotient {
-            numerator: Vec::with_capacity(size_n),
-            denominator: Vec::with_capacity(size_d),
+    pub fn new(n: usize, init_n: &[i32], init_d: &[i32]) -> Quotient {
+        let size = 2 * n;
+        let container_size = 2 * size;
+        let container = vec![1.0; container_size].into_boxed_slice();
+        let mut result: Quotient = Quotient {
+            container,
+            size,
             initial_n: 0,
             initial_d: 0,
+            n_idx: 0,
+            d_idx: 2 * n,
         };
         result.mul_fact(init_n);
         result.div_fact(init_d);
-        result.initial_n = result.numerator.len();
-        result.initial_d = result.denominator.len();
+        result.initial_n = init_n.iter().map(|i| usize::try_from(*i).unwrap()).sum();
+        result.initial_d = init_d.iter().map(|i| usize::try_from(*i).unwrap()).sum();
         result
     }
 
     #[inline(never)]
     pub fn mul_fact(&mut self, arr: &[i32]) {
         for x in arr {
-            self.numerator.extend((2..=*x).map(|x| x as f64));
+            for i in 1..=*x {
+                self.container[self.n_idx] = i as f64;
+                self.n_idx += 1;
+            }
+            //self.numerator.extend((1..=*x).map(|x| x as f64));
             // let idx = *x as usize;
             // if idx < MAX_FACTORIAL {
             //     self.numerator.push(FACTORIALS[idx]);
@@ -43,10 +53,11 @@ impl Quotient {
     #[inline(never)]
     pub fn div_fact(&mut self, arr: &[i32]) {
         for x in arr {
-            // for i in 2..=*x {
-            //     self.denominator.push(i);
-            // }
-            self.denominator.extend((2..=*x).map(|x| x as f64));
+            for i in 1..=*x {
+                self.container[self.d_idx] = i as f64;
+                self.d_idx += 1;
+            }
+            //self.denominator.extend((1..=*x).map(|x| x as f64));
             // let idx = *x as usize;
             // if idx < MAX_FACTORIAL {
             //     self.denominator.push(FACTORIALS[idx]);
@@ -61,17 +72,22 @@ impl Quotient {
     pub fn solve(&mut self) -> f64 {
         let mut result = 1.0;
 
-        let n = self.numerator.len();
-        let d = self.denominator.len();
+        //let n = self.numerator.len();
+        //let d = self.denominator.len();
 
         //let len = usize::min(n, d);
-        let len = if n < d { n } else { d };
+        //let len = if n < d { n } else { d };
+        //assert!(n == d);
 
-        for i in 0..len {
-            result *= self.numerator[i] / self.denominator[i];
+        // TODO without unsafe
+        unsafe {
+            for i in 0..self.size {
+                result *=
+                    self.container.get_unchecked(i) / self.container.get_unchecked(self.size + i);
+            }
         }
 
-        if n > d {
+        /*if n > d {
             for i in d..n {
                 result *= self.numerator[i];
             }
@@ -79,28 +95,58 @@ impl Quotient {
             for i in n..d {
                 result /= self.denominator[i];
             }
-        }
+        }*/
         return result;
     }
 
     #[inline(never)]
     pub fn clear(&mut self) {
-        self.numerator.truncate(self.initial_n);
-        self.denominator.truncate(self.initial_d);
+        self.n_idx = self.initial_n;
+        self.d_idx = self.size + self.initial_d;
+        //self.numerator.truncate(self.initial_n);
+        //self.denominator.truncate(self.initial_d);
     }
 }
 
 #[test]
 fn test1() {
-    let mut q = Quotient::default();
-    q.mul_fact(&[15, 7, 7]);
-    q.div_fact(&[4, 16, 7, 6]);
+    let row_sum = vec![4, 5, 3, 3];
+    let col_sum = vec![3, 7, 2, 3];
 
-    assert!(float_cmp::approx_eq!(
-        f64,
-        q.solve(),
-        7.0 / (4.0 * 3.0 * 2.0 * 16.0)
-    ));
+    let n: i32 = row_sum.iter().sum();
+
+    let mut q = Quotient::new(n as usize, &[], &[]);
+
+    let mut fact = vec![0.0; (n + 1) as usize];
+    fact[0] = 0.0;
+    let mut x = 1.0;
+    for i in 1..=(n as usize) {
+        fact[i] = fact[i - 1] + f64::ln(x);
+        x += 1.0;
+    }
+
+    let mut rng = rand::thread_rng();
+    let mut seed = rng.gen::<i32>();
+
+    let result = asa159::rcont2(
+        i32::try_from(row_sum.len()).unwrap(),
+        i32::try_from(col_sum.len()).unwrap(),
+        &row_sum,
+        &col_sum,
+        &mut 0,
+        &mut seed,
+        &fact,
+    );
+
+    q.mul_fact(&[4, 5, 3, 3, 3, 7, 2, 3]);
+    q.div_fact(&[n; 1]);
+    println!("{:?}", &result);
+    q.div_fact(&result.unwrap());
+
+    let result = q.solve();
+    dbg!(&result);
+
+    //assert!(float_cmp::approx_eq!(f64, result, 6.0 / 5005.0));
 }
 
 /*

@@ -66,9 +66,9 @@ fn fill(mat_new: &mut Vec<i32>, r_sum: &Vec<i32>, c_sum: &Vec<i32>, p_0: f64) ->
     set!(mat_new, r - 1, c - 1, c, temp);
     //print!("{:?} ", &mat_new);
 
-    let n = r_sum.iter().sum();
+    let n = r_sum.iter().sum::<i32>();
 
-    let mut p_1 = Quotient::new(2 * n as usize, 2 * n as usize, &[], &[]);
+    let mut p_1 = Quotient::new(n.try_into().unwrap(), &[], &[]);
 
     p_1.mul_fact(r_sum);
     p_1.mul_fact(c_sum);
@@ -132,12 +132,14 @@ pub fn recursive(table: Vec<Vec<i32>>) -> PyResult<f64> {
 
     let mut mat = vec![0; col_sum.len() * row_sum.len()];
 
-    let mut p_0 = Quotient::default();
+    let n = row_sum.iter().sum::<i32>();
+
+    let mut p_0 = Quotient::new(n.try_into().unwrap(), &[], &[]);
 
     p_0.mul_fact(&row_sum);
     p_0.mul_fact(&col_sum);
 
-    p_0.div_fact(&[row_sum.iter().sum(); 1]);
+    p_0.div_fact(&[n; 1]);
     p_0.div_fact(&table.iter().flatten().map(|x| *x).collect::<Vec<i32>>());
 
     let p = _dfs(&mut mat, 0, 0, &row_sum, &col_sum, p_0.solve());
@@ -157,13 +159,15 @@ pub fn fixed(table: Vec<Vec<i32>>) -> PyResult<f64> {
         return Ok(-1.0);
     }
 
-    let mut p_0 = Quotient::default();
+    let n: i32 = row_sum.iter().sum();
+
+    let mut p_0 = Quotient::new(n.try_into().unwrap(), &[], &[]);
 
     p_0.mul_fact(&row_sum);
     p_0.mul_fact(&col_sum);
 
-    p_0.div_fact(&[row_sum.iter().sum(); 1]);
-    p_0.div_fact(&table.iter().flatten().map(|x| *x).collect::<Vec<i32>>());
+    p_0.div_fact(&[n; 1]);
+    p_0.div_fact(&table.iter().flatten().cloned().collect::<Vec<i32>>());
 
     let stat = p_0.solve() + 0.00000001;
 
@@ -809,7 +813,12 @@ fn fixed3x3() {
     let input = vec![vec![32, 10, 20], vec![20, 25, 18], vec![11, 17, 14]];
     let output = fixed(input).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.011074529608901276);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.011074529608901276,
+        epsilon = 0.000001
+    ));
 }
 
 #[test]
