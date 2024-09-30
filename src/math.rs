@@ -1,3 +1,8 @@
+#[cfg(test)]
+use crate::asa159;
+#[cfg(test)]
+use rand::Rng;
+
 pub struct Quotient {
     container: Box<[f64]>,
     size: usize,
@@ -35,7 +40,7 @@ impl Quotient {
     #[inline(never)]
     pub fn mul_fact(&mut self, arr: &[i32]) {
         for x in arr {
-            for i in 1..=*x {
+            for i in 2..=*x {
                 self.container[self.n_idx] = i as f64;
                 self.n_idx += 1;
             }
@@ -53,7 +58,7 @@ impl Quotient {
     #[inline(never)]
     pub fn div_fact(&mut self, arr: &[i32]) {
         for x in arr {
-            for i in 1..=*x {
+            for i in 2..=*x {
                 self.container[self.d_idx] = i as f64;
                 self.d_idx += 1;
             }
@@ -78,24 +83,27 @@ impl Quotient {
         //let len = usize::min(n, d);
         //let len = if n < d { n } else { d };
         //assert!(n == d);
+        let n = self.n_idx;
+        let d = self.d_idx - self.size;
 
+        //let len = if n < d { n } else { d };
         // TODO without unsafe
         unsafe {
-            for i in 0..self.size {
+            for i in 0..d {
                 result *=
                     self.container.get_unchecked(i) / self.container.get_unchecked(self.size + i);
             }
+            //if n > d {
+            for i in d..n {
+                result *= self.container.get_unchecked(i);
+            }
+            // } else {
+            //     for i in d..n {
+            //         result /= self.container.get_unchecked(self.size + i);
+            //     }
+            // }
         }
 
-        /*if n > d {
-            for i in d..n {
-                result *= self.numerator[i];
-            }
-        } else if n < d {
-            for i in n..d {
-                result /= self.denominator[i];
-            }
-        }*/
         return result;
     }
 
@@ -103,6 +111,12 @@ impl Quotient {
     pub fn clear(&mut self) {
         self.n_idx = self.initial_n;
         self.d_idx = self.size + self.initial_d;
+        for i in self.n_idx..self.size {
+            self.container[i] = 1.0;
+        }
+        for i in self.d_idx..(self.size * 2) {
+            self.container[i] = 1.0;
+        }
         //self.numerator.truncate(self.initial_n);
         //self.denominator.truncate(self.initial_d);
     }
