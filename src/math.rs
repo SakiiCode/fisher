@@ -4,12 +4,14 @@ use crate::asa159;
 use rand::Rng;
 
 pub struct Quotient {
-    container: Box<[f64]>,
+    container: Vec<f64>,
     size: usize,
-    initial_n: usize,
-    initial_d: usize,
-    n_idx: usize,
-    d_idx: usize,
+    initial_sln: f64,
+    initial_idx: usize,
+    //n_idx: usize,
+    //d_idx: usize,
+    idx: usize,
+    solution: f64,
 }
 
 // const MAX_FACTORIAL: usize = 13;
@@ -20,31 +22,36 @@ pub struct Quotient {
 impl Quotient {
     pub fn new(n: usize, init_n: &[i32], init_d: &[i32]) -> Quotient {
         let size = 2 * n;
-        let container_size = 2 * size;
-        let container = vec![1.0; container_size].into_boxed_slice();
+        let container_size = size;
+        let container = Vec::with_capacity(container_size);
         let mut result: Quotient = Quotient {
             container,
             size,
-            initial_n: 0,
-            initial_d: 0,
-            n_idx: 0,
-            d_idx: 2 * n,
+            initial_sln: 1.0,
+            initial_idx: 0,
+            //n_idx: 0,
+            //d_idx: size,
+            idx: 0,
+            solution: 1.0,
         };
         result.mul_fact(init_n);
         result.div_fact(init_d);
-        result.initial_n = init_n.iter().map(|i| usize::try_from(*i).unwrap()).sum();
-        result.initial_d = init_d.iter().map(|i| usize::try_from(*i).unwrap()).sum();
+        //result.initial_n = init_n.iter().map(|i| usize::try_from(*i).unwrap()).sum();
+        result.initial_idx = init_d.iter().map(|i| usize::try_from(*i).unwrap()).sum();
+        result.initial_sln = result.solution;
         result
     }
 
     #[inline(never)]
     pub fn mul_fact(&mut self, arr: &[i32]) {
         for x in arr {
-            for i in 2..=*x {
-                self.container[self.n_idx] = i as f64;
-                self.n_idx += 1;
-            }
-            //self.numerator.extend((1..=*x).map(|x| x as f64));
+            // for i in 1..=*x {
+            //     unsafe {
+            //         *self.container.get_unchecked_mut(self.idx) = i as f64;
+            //     }
+            //     //self.idx += 1;
+            // }
+            self.container.extend((1..=*x).map(|x| x as f64));
             // let idx = *x as usize;
             // if idx < MAX_FACTORIAL {
             //     self.numerator.push(FACTORIALS[idx]);
@@ -58,9 +65,14 @@ impl Quotient {
     #[inline(never)]
     pub fn div_fact(&mut self, arr: &[i32]) {
         for x in arr {
-            for i in 2..=*x {
-                self.container[self.d_idx] = i as f64;
-                self.d_idx += 1;
+            for i in 1..=*x {
+                unsafe {
+                    //*self.container.get_unchecked_mut(self.d_idx) = i as f64;
+                    let num = *self.container.get_unchecked(self.idx);
+                    self.solution *= num / i as f64;
+                }
+
+                self.idx += 1;
             }
             //self.denominator.extend((1..=*x).map(|x| x as f64));
             // let idx = *x as usize;
@@ -75,7 +87,7 @@ impl Quotient {
 
     #[inline(never)]
     pub fn solve(&mut self) -> f64 {
-        let mut result = 1.0;
+        //let mut result = 1.0;
 
         //let n = self.numerator.len();
         //let d = self.denominator.len();
@@ -83,40 +95,36 @@ impl Quotient {
         //let len = usize::min(n, d);
         //let len = if n < d { n } else { d };
         //assert!(n == d);
-        let n = self.n_idx;
-        let d = self.d_idx - self.size;
+        //let n = self.n_idx;
+        //let d = self.d_idx;
 
         //let len = if n < d { n } else { d };
         // TODO without unsafe
-        unsafe {
-            for i in 0..d {
-                result *=
-                    self.container.get_unchecked(i) / self.container.get_unchecked(self.size + i);
-            }
+        /*unsafe {
+            //for i in 0..d {
+            //     result *=
+            //         self.container.get_unchecked(i) / self.container.get_unchecked(self.size + i);
+            // }
             //if n > d {
-            for i in d..n {
-                result *= self.container.get_unchecked(i);
+            for i in self.idx..self.size {
+                self.solution *= self.container.get_unchecked(i);
             }
             // } else {
             //     for i in d..n {
             //         result /= self.container.get_unchecked(self.size + i);
             //     }
             // }
-        }
+        }*/
 
-        return result;
+        return self.solution;
     }
 
     #[inline(never)]
     pub fn clear(&mut self) {
-        self.n_idx = self.initial_n;
-        self.d_idx = self.size + self.initial_d;
-        for i in self.n_idx..self.size {
-            self.container[i] = 1.0;
-        }
-        for i in self.d_idx..(self.size * 2) {
-            self.container[i] = 1.0;
-        }
+        //self.n_idx = self.initial_n;
+        //self.d_idx = self.size; // + self.initial_d;
+        self.idx = self.initial_idx;
+        self.solution = self.initial_sln;
         //self.numerator.truncate(self.initial_n);
         //self.denominator.truncate(self.initial_d);
     }
@@ -124,8 +132,8 @@ impl Quotient {
 
 #[test]
 fn test1() {
-    let row_sum = vec![4, 5, 3, 3];
-    let col_sum = vec![3, 7, 2, 3];
+    let row_sum = vec![4, 5, 3, 3, 5];
+    let col_sum = vec![3, 7, 2, 3, 5];
 
     let n: i32 = row_sum.iter().sum();
 
@@ -163,22 +171,16 @@ fn test1() {
     //assert!(float_cmp::approx_eq!(f64, result, 6.0 / 5005.0));
 }
 
-/*
 #[test]
 fn test2() {
-    let mut q = Quotient::default();
-    q.mul_fact(7);
-    q.mul_fact(6);
-    q.mul_fact(6);
-    q.mul_fact(6);
+    let mut q = Quotient::new(19, &[7, 6, 6, 6], &[13]);
 
-    q.div_fact(13);
-    q.div_fact(6);
-    q.div_fact(6);
+    q.div_fact(&[6]);
+    q.div_fact(&[6]);
 
     assert!(float_cmp::approx_eq!(f64, q.solve(), 1.0 / 1716.0));
 }
-
+/*
 #[test]
 fn test3() {
     let mut q = Quotient::default();
