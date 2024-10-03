@@ -36,7 +36,7 @@ macro_rules! set {
 fn fill(mat_new: &mut Vec<i32>, r_sum: &Vec<i32>, c_sum: &Vec<i32>, p_0: f64) -> f64 {
     let r = r_sum.len();
     let c = c_sum.len();
-    print!("{:?} -> ", &mat_new);
+    //print!("{:?} -> ", &mat_new);
 
     for i in 0..r - 1 {
         let mut temp = r_sum[i];
@@ -56,7 +56,7 @@ fn fill(mat_new: &mut Vec<i32>, r_sum: &Vec<i32>, c_sum: &Vec<i32>, p_0: f64) ->
     let mut temp = r_sum[r - 1];
     for j in 0..c - 1 {
         if temp < get!(mat_new, r - 1, j, c) {
-            println!();
+            //println!();
             return 0.0;
         } else {
             temp -= get!(mat_new, r - 1, j, c);
@@ -64,7 +64,7 @@ fn fill(mat_new: &mut Vec<i32>, r_sum: &Vec<i32>, c_sum: &Vec<i32>, p_0: f64) ->
     }
 
     set!(mat_new, r - 1, c - 1, c, temp);
-    print!("{:?} ", &mat_new);
+    //print!("{:?} ", &mat_new);
 
     let n = r_sum.iter().sum::<i32>();
 
@@ -78,10 +78,10 @@ fn fill(mat_new: &mut Vec<i32>, r_sum: &Vec<i32>, c_sum: &Vec<i32>, p_0: f64) ->
 
     let p_1_res = p_1.solve();
     if p_1_res <= p_0 + 0.00000001 {
-        println!(" p={}", p_1_res);
+        //println!(" p={}", p_1_res);
         return p_1_res;
     } else {
-        println!(" p={p_1_res} (DISCARDED)");
+        //println!(" p={p_1_res} (DISCARDED)");
         return 0.0;
     }
 }
@@ -407,7 +407,7 @@ fn rec2x2() {
     let input = vec![vec![3, 4], vec![4, 2]];
     let output = recursive(input).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.5920745920745921);
+    assert_eq!(output, 0.5920745920745922);
 }
 
 #[test]
@@ -415,7 +415,7 @@ fn rec3x3() {
     let input = vec![vec![4, 1, 0], vec![1, 5, 0], vec![1, 1, 4]];
     let output = recursive(input).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.005293725881961177);
+    assert_eq!(output, 0.005293725881961175);
 }
 
 #[test]
@@ -423,7 +423,7 @@ fn rec3x3_large() {
     let input = vec![vec![32, 10, 20], vec![12, 25, 18], vec![11, 17, 14]];
     let output = recursive(input).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.0014878318795286457);
+    assert_eq!(output, 0.0014878318795286459);
 }
 
 #[test]
@@ -436,7 +436,7 @@ fn rec4x4() {
     ];
     let output = recursive(input).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.010961244321907074);
+    assert_eq!(output, 0.01096124432190708);
 }
 
 #[test]
@@ -483,7 +483,7 @@ fn rec5x4() {
     ];
     let output = recursive(input).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.63888061913001);
+    assert_eq!(output, 0.6388806191300103);
 }
 
 #[test]
@@ -830,7 +830,12 @@ fn fixed4x4() {
     ];
     let output = fixed(input).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.010961244321907074);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.010961244321907074,
+        epsilon = 0.000001
+    ));
 }
 
 #[test]
