@@ -103,35 +103,35 @@ fn _dfs(
 ) -> f64 {
     let r = r_sum.len();
     let c = c_sum.len();
-    let mut max_1;
-    let mut max_2;
-    unsafe {
-        max_1 = *r_sum.get_unchecked(xx);
-        max_2 = *c_sum.get_unchecked(yy);
+
+    let mut max_2 = c_sum[yy];
+
+    let max_1 = r_sum[xx] - &mat_new[xx * c..(xx + 1) * c].iter().sum();
+
+    for index in (yy..mat_new.len()).step_by(c) {
+        max_2 -= mat_new[index];
     }
 
-    for j in 0..c {
-        max_1 -= get!(mat_new, xx, j, c);
-    }
+    let next_cycle = |k| {
+        let mut mat_new2 = mat_new.clone();
+        set!(mat_new2, xx, yy, c, k);
+        if xx + 2 == r && yy + 2 == c {
+            return fill(&mut mat_new2, r_sum, c_sum, p_0, tl);
+        } else if xx + 2 == r {
+            return _dfs(&mut mat_new2, 0, yy + 1, r_sum, c_sum, p_0, tl);
+        } else {
+            return _dfs(&mut mat_new2, xx + 1, yy, r_sum, c_sum, p_0, tl);
+        }
+    };
 
-    for i in 0..r {
-        max_2 -= get!(mat_new, i, yy, c);
+    if yy == 0 {
+        return (0..=min(max_1, max_2))
+            .into_par_iter()
+            .map(next_cycle)
+            .sum();
+    } else {
+        return (0..=min(max_1, max_2)).map(next_cycle).sum();
     }
-
-    return (0..=min(max_1, max_2))
-        .into_par_iter()
-        .map(|k| {
-            let mut mat_new2 = mat_new.clone();
-            set!(mat_new2, xx, yy, c, k);
-            if xx + 2 == r && yy + 2 == c {
-                return fill(&mut mat_new2, r_sum, c_sum, p_0, tl);
-            } else if xx + 2 == r {
-                return _dfs(&mut mat_new2, 0, yy + 1, r_sum, c_sum, p_0, tl);
-            } else {
-                return _dfs(&mut mat_new2, xx + 1, yy, r_sum, c_sum, p_0, tl);
-            }
-        })
-        .sum();
 }
 
 #[pyfunction]
