@@ -19,6 +19,7 @@ mimalloc = "0.1.43"
 pyo3 = "0.22.2"
 rand = "0.8.5"
 rayon = "1.10.0"
+thread_local = "1.1.8"
 
 [profile.release]
 lto = "fat"

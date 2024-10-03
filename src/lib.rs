@@ -9,7 +9,8 @@ use math::Quotient;
 use pyo3::prelude::*;
 use rand::Rng;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
-use std::{cmp::min, sync::Mutex, vec};
+use std::{cell::RefCell, cmp::min, sync::Mutex, vec};
+use thread_local::ThreadLocal;
 
 mod asa159;
 mod asa643;
@@ -26,7 +27,13 @@ macro_rules! set {
         unsafe { *$arr.get_unchecked_mut($r * $cols + $c) = $val }
     };
 }
-fn fill(mat_new: &mut Vec<u32>, r_sum: &Vec<u32>, c_sum: &Vec<u32>, p_0: f64) -> f64 {
+fn fill(
+    mat_new: &mut Vec<u32>,
+    r_sum: &Vec<u32>,
+    c_sum: &Vec<u32>,
+    p_0: f64,
+    tl: &ThreadLocal<Box<RefCell<Quotient>>>,
+) -> f64 {
     let r = r_sum.len();
     let c = c_sum.len();
     //print!("{:?} -> ", &mat_new);
@@ -62,12 +69,17 @@ fn fill(mat_new: &mut Vec<u32>, r_sum: &Vec<u32>, c_sum: &Vec<u32>, p_0: f64) ->
 
     let n = r_sum.iter().sum();
 
-    let mut p_1 = Quotient::new(2 * n as usize, 2 * n as usize);
+    let p_1_ref = tl.get_or(|| {
+        let mut init_n = Vec::with_capacity(r + c);
+        let init_d = vec![n];
+        init_n.extend_from_slice(r_sum);
+        init_n.extend_from_slice(c_sum);
+        Box::new(RefCell::new(Quotient::new(n as usize, &init_n, &init_d)))
+    });
 
-    p_1.mul_fact(r_sum);
-    p_1.mul_fact(c_sum);
+    let mut p_1 = (p_1_ref).borrow_mut();
+    p_1.clear();
 
-    p_1.div_fact(&[n; 1]);
     p_1.div_fact(mat_new);
 
     let p_1_res = p_1.solve();
@@ -87,6 +99,7 @@ fn _dfs(
     r_sum: &Vec<u32>,
     c_sum: &Vec<u32>,
     p_0: f64,
+    tl: &ThreadLocal<Box<RefCell<Quotient>>>,
 ) -> f64 {
     let r = r_sum.len();
     let c = c_sum.len();
@@ -111,11 +124,11 @@ fn _dfs(
             let mut mat_new2 = mat_new.clone();
             set!(mat_new2, xx, yy, c, k);
             if xx + 2 == r && yy + 2 == c {
-                return fill(&mut mat_new2, r_sum, c_sum, p_0);
+                return fill(&mut mat_new2, r_sum, c_sum, p_0, tl);
             } else if xx + 2 == r {
-                return _dfs(&mut mat_new2, 0, yy + 1, r_sum, c_sum, p_0);
+                return _dfs(&mut mat_new2, 0, yy + 1, r_sum, c_sum, p_0, tl);
             } else {
-                return _dfs(&mut mat_new2, xx + 1, yy, r_sum, c_sum, p_0);
+                return _dfs(&mut mat_new2, xx + 1, yy, r_sum, c_sum, p_0, tl);
             }
         })
         .sum();
@@ -130,7 +143,9 @@ pub fn recursive(table: Vec<Vec<u32>>) -> PyResult<f64> {
 
     let mut mat = vec![0; col_sum.len() * row_sum.len()];
 
-    let mut p_0 = Quotient::default();
+    let n = row_sum.iter().sum::<u32>();
+
+    let mut p_0 = Quotient::new(n.try_into().unwrap(), &[], &[]);
 
     p_0.mul_fact(&row_sum);
     p_0.mul_fact(&col_sum);
@@ -138,7 +153,17 @@ pub fn recursive(table: Vec<Vec<u32>>) -> PyResult<f64> {
     p_0.div_fact(&[row_sum.iter().sum(); 1]);
     p_0.div_fact(&table.iter().flatten().map(|x| *x).collect::<Vec<u32>>());
 
-    let p = _dfs(&mut mat, 0, 0, &row_sum, &col_sum, p_0.solve() + 0.00000001);
+    let tl = ThreadLocal::new();
+
+    let p = _dfs(
+        &mut mat,
+        0,
+        0,
+        &row_sum,
+        &col_sum,
+        p_0.solve() + 0.00000001,
+        &tl,
+    );
 
     return Ok(p);
 }
