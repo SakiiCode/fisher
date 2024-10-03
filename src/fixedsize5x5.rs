@@ -2,7 +2,7 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::{
     cell::RefCell,
     cmp::min,
-    ops::{IndexMut, SubAssign},
+    ops::SubAssign,
     simd::{num::SimdInt, LaneCount, Simd, SupportedLaneCount},
 };
 use thread_local::ThreadLocal;
@@ -46,13 +46,9 @@ where
 
     let mut c_vec_red: Simd<i32, N> = Simd::from_slice(r_sum);
 
-    for i in 0..N {
-        let mut col_simd = Simd::from_array([0; N]);
-        for j in 0..N {
-            *col_simd.index_mut(j) = mat_new[j * N + i];
-        }
-        c_vec_red.sub_assign(col_simd);
-    }
+    let col = r_vec.map(|row| row.reduce_sum());
+    let col_simd = Simd::from(col);
+    c_vec_red.sub_assign(col_simd);
 
     // r_sum is N+1 length, SIMD cannot be used
     let n: i32 = r_sum.iter().sum();
