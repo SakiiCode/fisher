@@ -38,18 +38,17 @@ fn fill(
     let c = c_sum.len();
     //print!("{:?} -> ", &mat_new);
 
-    for j in 0..c - 1 {
-        let mut temp = c_sum[j];
-        for i in 0..r - 1 {
-            temp -= get!(mat_new, i, j, c);
-        }
-        set!(mat_new, r - 1, j, c, temp);
+    for i in 0..r - 1 {
+        let mut temp: u32 = r_sum[i];
+        temp -= mat_new[i * c..(i + 1) * c].iter().sum::<u32>();
+        set!(mat_new, i, c - 1, c, temp);
     }
 
-    let temp = r_sum[r - 1];
+    let temp = c_sum[r - 1];
     let mut sum = 0;
-    for j in 0..c - 1 {
-        sum += get!(mat_new, r - 1, j, c);
+
+    for j in (c - 1..mat_new.len()).step_by(c) {
+        sum += mat_new[j];
     }
     if temp < sum {
         //println!();
@@ -59,12 +58,12 @@ fn fill(
     set!(mat_new, r - 1, c - 1, c, temp - sum);
     //print!("{:?} ", &mat_new);
 
-    for i in 0..r - 1 {
-        let mut temp = r_sum[i];
-        for j in 0..c - 1 {
+    for j in 0..c - 1 {
+        let mut temp = c_sum[j];
+        for i in 0..r - 1 {
             temp -= get!(mat_new, i, j, c);
         }
-        set!(mat_new, i, c - 1, c, temp);
+        set!(mat_new, r - 1, j, c, temp);
     }
 
     let n = r_sum.iter().sum();
