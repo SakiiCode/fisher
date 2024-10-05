@@ -104,6 +104,19 @@ fn sim2x2() {
 }
 
 #[test]
+fn sim3x2() {
+    let input = vec![vec![32, 10, 20], vec![20, 25, 18]];
+    let output = calculate(input, 1000000).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.009645916798182401,
+        epsilon = 0.002
+    ));
+}
+
+#[test]
 fn sim3x3() {
     let input = vec![vec![32, 10, 20], vec![20, 25, 18], vec![11, 17, 14]];
     let output = calculate(input, 1000000).unwrap();

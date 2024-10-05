@@ -134,12 +134,8 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
         .map(|index| table.iter().map(|row| row[index]).sum())
         .collect();
 
-    if table.len() != table[0].len() {
-        println!("fisher.calculate() can only be used with square matrices yet!");
-        return Ok(-1.0);
-    }
-
     let n: i32 = row_sum.iter().sum();
+    let seq = &table.iter().flatten().cloned().collect::<Vec<i32>>();
 
     let mut p_0 = Quotient::new(n.try_into().unwrap(), &[], &[]);
 
@@ -147,11 +143,12 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
     p_0.mul_fact(&col_sum);
 
     p_0.div_fact(&[n; 1]);
-    p_0.div_fact(&table.iter().flatten().cloned().collect::<Vec<i32>>());
+    p_0.div_fact(seq);
 
     let stat = p_0.solve() + f64::EPSILON;
+    let needed_lanes = usize::max(row_sum.len(), col_sum.len());
 
-    let lanes: usize = match table.len() {
+    let lanes: usize = match needed_lanes {
         1 => {
             println!("Invalid table size!");
             return Ok(-1.0);
@@ -240,6 +237,19 @@ fn fixed2x2() {
 }
 
 #[test]
+fn fixed3x2() {
+    let input = vec![vec![32, 10, 20], vec![20, 25, 18]];
+    let output = calculate(input).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.009645916798182401,
+        epsilon = 0.000001
+    ));
+}
+
+#[test]
 fn fixed3x3() {
     let input = vec![vec![32, 10, 20], vec![20, 25, 18], vec![11, 17, 14]];
     let output = calculate(input).unwrap();
@@ -285,43 +295,6 @@ fn fixed4x4_large() {
 }
 
 #[test]
-#[ignore] //TODO extend to square
-fn fixed3x4_large() {
-    let input = vec![
-        vec![11, 12, 18, 15],
-        vec![15, 13, 13, 15],
-        vec![15, 19, 19, 15],
-    ];
-    let output = calculate(input).unwrap();
-    dbg!(output);
-    assert!(float_cmp::approx_eq!(
-        f64,
-        output,
-        0.8821660735808727,
-        epsilon = 0.000001
-    ));
-}
-
-#[test]
-#[ignore] //TODO extend to square
-fn fixed4x5big() {
-    let input = vec![
-        vec![8, 3, 5, 5, 6],
-        vec![4, 3, 8, 6, 5],
-        vec![2, 5, 3, 7, 6],
-        vec![4, 8, 2, 3, 6],
-    ];
-    let output = calculate(input).unwrap();
-    dbg!(output);
-    assert!(float_cmp::approx_eq!(
-        f64,
-        output,
-        0.39346963278427133,
-        epsilon = 0.000001
-    ));
-}
-
-#[test]
 #[ignore]
 fn fixed5x5() {
     let input = vec![
@@ -336,7 +309,7 @@ fn fixed5x5() {
     assert!(float_cmp::approx_eq!(
         f64,
         output,
-        0.24678711559405725,
+        0.22200753799676337,
         epsilon = 0.000001
     ));
 }

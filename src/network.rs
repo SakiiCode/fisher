@@ -77,6 +77,19 @@ fn proc2x2() {
 }
 
 #[test]
+fn proc3x2() {
+    let input = vec![vec![32, 10, 20], vec![20, 25, 18]];
+    let output = calculate(input, None).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.009645916798182401,
+        epsilon = 0.000001
+    ));
+}
+
+#[test]
 fn proc3x3() {
     let input = vec![vec![32, 10, 20], vec![20, 25, 18], vec![11, 17, 14]];
     let output = calculate(input, None).unwrap();
