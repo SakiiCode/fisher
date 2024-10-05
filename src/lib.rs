@@ -3,7 +3,6 @@
 #![feature(portable_simd)]
 #![allow(clippy::needless_return)]
 #![allow(clippy::ptr_arg)]
-use fixedsize5x5::dfs;
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -16,9 +15,11 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::{cmp::min, sync::Mutex, vec};
 use thread_local::ThreadLocal;
 
+use fixedsize::dfs;
+
 mod asa159;
 mod asa643;
-mod fixedsize5x5;
+mod fixedsize;
 mod math;
 
 macro_rules! get {
