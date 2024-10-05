@@ -4,9 +4,6 @@
 #![allow(clippy::needless_return)]
 #![allow(clippy::ptr_arg)]
 
-#[global_allocator]
-static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
-
 use core::f64;
 use lazy_static::lazy_static;
 use math::Quotient;
