@@ -137,6 +137,16 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
     let n: i32 = row_sum.iter().sum();
     let seq = &table.iter().flatten().cloned().collect::<Vec<i32>>();
 
+    if seq.iter().any(|x| *x < 0) {
+        println!("ERROR: Negative value in the table!");
+        return Ok(-1.0);
+    }
+
+    if seq.iter().all(|x| *x == 0) {
+        println!("ERROR: All elements in the table are zero!");
+        return Ok(-1.0);
+    }
+
     let mut p_0 = Quotient::new(n.try_into().unwrap(), &[], &[]);
 
     p_0.mul_fact(&row_sum);
@@ -148,9 +158,9 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
     let stat = p_0.solve() + f64::EPSILON;
     let needed_lanes = usize::max(row_sum.len(), col_sum.len());
 
-    let lanes: usize = match needed_lanes {
+    let lanes = match needed_lanes {
         1 => {
-            println!("Invalid table size!");
+            println!("ERROR: Invalid table size!");
             return Ok(-1.0);
         }
         2 => 1,
@@ -159,7 +169,7 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
         6..=9 => 8,
         10..=17 => 16,
         _ => {
-            println!("fisher.calculate() can only be used with up to 16x16 matrices!");
+            println!("ERROR: fisher.recursive() can only be used with up to 17x17 matrices!");
             return Ok(-1.0);
         }
     };
@@ -224,6 +234,14 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
 }
 
 #[test]
+fn fixed1x1_error() {
+    let input = vec![vec![5]];
+    let output = calculate(input).unwrap();
+    dbg!(output);
+    assert_eq!(output, -1.0);
+}
+
+#[test]
 fn fixed2x2() {
     let input = vec![vec![3, 4], vec![4, 2]];
     let output = calculate(input).unwrap();
@@ -234,6 +252,14 @@ fn fixed2x2() {
         0.5920745920745918,
         epsilon = 0.000001
     ));
+}
+
+#[test]
+fn fixed2x2_error() {
+    let input = vec![vec![3, 4], vec![4, -2]];
+    let output = calculate(input).unwrap();
+    dbg!(output);
+    assert_eq!(output, -1.0);
 }
 
 #[test]
@@ -260,6 +286,22 @@ fn fixed3x3() {
         0.010967949934049852,
         epsilon = 0.000001
     ));
+}
+
+#[test]
+fn fixed3x3_unit() {
+    let input = vec![vec![1, 0, 0], vec![0, 1, 0], vec![0, 0, 1]];
+    let output = calculate(input).unwrap();
+    dbg!(output);
+    assert_eq!(output, 1.0);
+}
+
+#[test]
+fn fixed3x3_zero() {
+    let input = vec![vec![0, 0, 0], vec![0, 0, 0], vec![0, 0, 0]];
+    let output = calculate(input).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(f64, output, -1.0, epsilon = 0.000001));
 }
 
 #[test]
@@ -331,4 +373,31 @@ fn fixed5x5_small() {
         0.9712771262351103,
         epsilon = 0.000001
     ));
+}
+
+#[test]
+fn fixed18x8_error() {
+    let input = vec![
+        vec![0, 4, 1, 0, 0, 0, 1, 0],
+        vec![0, 1, 0, 0, 0, 0, 0, 0],
+        vec![0, 1, 0, 0, 0, 0, 0, 0],
+        vec![1, 8, 1, 0, 1, 0, 0, 0],
+        vec![0, 1, 1, 1, 0, 1, 0, 0],
+        vec![0, 5, 0, 0, 1, 0, 0, 0],
+        vec![1, 3, 0, 1, 2, 2, 1, 0],
+        vec![2, 7, 0, 0, 1, 4, 1, 1],
+        vec![0, 1, 0, 0, 0, 0, 0, 0],
+        vec![0, 1, 1, 0, 0, 1, 0, 0],
+        vec![0, 3, 1, 0, 0, 0, 1, 0],
+        vec![0, 0, 0, 0, 1, 0, 0, 0],
+        vec![0, 0, 0, 0, 0, 3, 0, 0],
+        vec![0, 1, 0, 0, 0, 0, 0, 0],
+        vec![1, 2, 1, 1, 0, 1, 0, 1],
+        vec![1, 0, 1, 0, 1, 3, 0, 0],
+        vec![0, 3, 1, 0, 0, 0, 1, 0],
+        vec![0, 5, 0, 0, 1, 0, 0, 0],
+    ];
+    let result = calculate(input).unwrap();
+    dbg!(result);
+    assert_eq!(result, -1.0);
 }

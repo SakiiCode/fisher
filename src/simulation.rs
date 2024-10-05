@@ -22,12 +22,18 @@ pub fn calculate(table: Vec<Vec<i32>>, iterations: i32) -> Result<f64, Infallibl
         x += 1.0;
     }
 
-    let row_sum_i = row_sum.iter().map(|s| (*s).try_into().unwrap()).collect();
-    let col_sum_i = col_sum.iter().map(|s| (*s).try_into().unwrap()).collect();
+    let seq = table.iter().flatten().cloned().collect::<Vec<i32>>();
+    if seq.iter().any(|x| *x < 0) {
+        println!("ERROR: Negative value in matrix!");
+        return Ok(-1.0);
+    }
 
     let nrow = row_sum.len();
     let ncol = col_sum.len();
     let statistic = find_statistic_r(&table, &fact) + f64::EPSILON;
+
+    let row_sum_i = row_sum.iter().map(|s| (*s).try_into().unwrap()).collect();
+    let col_sum_i = col_sum.iter().map(|s| (*s).try_into().unwrap()).collect();
 
     let test = generate(&row_sum_i, &col_sum_i, &fact);
     if let Err(error) = test {
@@ -91,6 +97,14 @@ fn generate(
 }
 
 #[test]
+fn sim1x1_error() {
+    let input = vec![vec![5]];
+    let output = calculate(input, 1000000).unwrap();
+    dbg!(output);
+    assert_eq!(output, -1.0);
+}
+
+#[test]
 fn sim2x2() {
     let input = vec![vec![3, 4], vec![4, 2]];
     let output = calculate(input, 1000000).unwrap();
@@ -101,6 +115,14 @@ fn sim2x2() {
         0.5920745920745918,
         epsilon = 0.002
     ));
+}
+
+#[test]
+fn sim2x2_error() {
+    let input = vec![vec![3, 4], vec![4, -2]];
+    let output = calculate(input, 1000000).unwrap();
+    dbg!(output);
+    assert_eq!(output, -1.0);
 }
 
 #[test]
@@ -127,6 +149,22 @@ fn sim3x3() {
         0.010967949934049852,
         epsilon = 0.002
     ));
+}
+
+#[test]
+fn sim3x3_unit() {
+    let input = vec![vec![1, 0, 0], vec![0, 1, 0], vec![0, 0, 1]];
+    let output = calculate(input, 1000000).unwrap();
+    dbg!(output);
+    assert_eq!(output, 1.0);
+}
+
+#[test]
+fn sim3x3_zero() {
+    let input = vec![vec![0, 0, 0], vec![0, 0, 0], vec![0, 0, 0]];
+    let output = calculate(input, 1000000).unwrap();
+    dbg!(output);
+    assert_eq!(output, -3.0);
 }
 
 #[test]

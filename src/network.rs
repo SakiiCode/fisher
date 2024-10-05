@@ -64,6 +64,14 @@ pub fn calculate(table: Vec<Vec<i32>>, workspace: Option<i32>) -> Result<f64, In
 }
 
 #[test]
+fn proc1x1_error() {
+    let input = vec![vec![5]];
+    let output = calculate(input, None).unwrap();
+    dbg!(output);
+    assert_eq!(output, -4.0);
+}
+
+#[test]
 fn proc2x2() {
     let input = vec![vec![3, 4], vec![4, 2]];
     let output = calculate(input, None).unwrap();
@@ -74,6 +82,14 @@ fn proc2x2() {
         0.5920745920745918,
         epsilon = 0.000001
     ));
+}
+
+#[test]
+fn proc2x2_error() {
+    let input = vec![vec![3, 4], vec![4, -2]];
+    let output = calculate(input, None).unwrap();
+    dbg!(output);
+    assert_eq!(output, -2.0);
 }
 
 #[test]
@@ -100,6 +116,22 @@ fn proc3x3() {
         0.010967949934049852,
         epsilon = 0.000001
     ));
+}
+
+#[test]
+fn proc3x3_unit() {
+    let input = vec![vec![1, 0, 0], vec![0, 1, 0], vec![0, 0, 1]];
+    let output = calculate(input, None).unwrap();
+    dbg!(output);
+    assert_eq!(output, 1.0);
+}
+
+#[test]
+fn proc3x3_zero() {
+    let input = vec![vec![0, 0, 0], vec![0, 0, 0], vec![0, 0, 0]];
+    let output = calculate(input, None).unwrap();
+    dbg!(output);
+    assert_eq!(output, -3.0);
 }
 
 #[test]
