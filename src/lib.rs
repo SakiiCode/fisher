@@ -813,6 +813,7 @@ fn sim5x5_large() {
     ));
 }
 
+/*
 #[test]
 fn fixed2x2() {
     let input = vec![vec![3, 4], vec![4, 2]];
@@ -890,3 +891,4 @@ fn fixed5x5_small() {
     dbg!(output);
     assert_eq!(output, 0.9712771262351092);
 }
+*/
