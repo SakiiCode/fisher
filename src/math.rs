@@ -7,7 +7,7 @@ pub struct Quotient {
 }
 
 impl Quotient {
-    pub fn new(n: usize, init_n: &[u32], init_d: &[u32]) -> Quotient {
+    pub fn new(n: usize, init_n: &[i32], init_d: &[i32]) -> Quotient {
         let size = 2 * n;
         let container = Vec::with_capacity(size);
         let mut result: Quotient = Quotient {
@@ -24,15 +24,13 @@ impl Quotient {
         result
     }
 
-    #[inline(never)]
-    pub fn mul_fact(&mut self, arr: &[u32]) {
+    pub fn mul_fact(&mut self, arr: &[i32]) {
         for x in arr {
             self.container.extend((1..=*x).map(|x| x as f64));
         }
     }
 
-    #[inline(never)]
-    pub fn div_fact(&mut self, arr: &[u32]) {
+    pub fn div_fact(&mut self, arr: &[i32]) {
         for x in arr {
             for i in 1..=*x {
                 unsafe {
@@ -45,12 +43,10 @@ impl Quotient {
         }
     }
 
-    #[inline(never)]
     pub fn solve(&mut self) -> f64 {
         self.solution
     }
 
-    #[inline(never)]
     pub fn clear(&mut self) {
         self.idx = self.initial_idx;
         self.solution = self.initial_sln;
@@ -62,7 +58,7 @@ fn test1() {
     let mut row_sum = vec![4, 5, 3, 3, 5];
     let col_sum = vec![3, 7, 2, 3, 5];
 
-    let n: u32 = row_sum.iter().sum();
+    let n: i32 = row_sum.iter().sum();
 
     row_sum.extend_from_slice(&col_sum);
     let mut q = Quotient::new(n as usize, &row_sum, &[n; 1]);
