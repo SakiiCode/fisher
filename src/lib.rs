@@ -44,6 +44,21 @@ fn fill(mat_new: &mut Vec<i32>, r_sum: &Vec<i32>, c_sum: &Vec<i32>, p_0: f64) ->
         temp -= mat_new[i * c..(i + 1) * c].iter().sum::<i32>();
         set!(mat_new, i, c - 1, c, temp);
     }
+
+    let temp = c_sum[r - 1];
+    let mut sum = 0;
+
+    for j in (c - 1..mat_new.len()).step_by(c) {
+        sum += mat_new[j];
+    }
+    if temp < sum {
+        //println!();
+        return 0.0;
+    }
+
+    set!(mat_new, r - 1, c - 1, c, temp - sum);
+    //print!("{:?} ", &mat_new);
+
     for j in 0..c - 1 {
         let mut temp = c_sum[j];
         for i in 0..r - 1 {
@@ -52,35 +67,22 @@ fn fill(mat_new: &mut Vec<i32>, r_sum: &Vec<i32>, c_sum: &Vec<i32>, p_0: f64) ->
         set!(mat_new, r - 1, j, c, temp);
     }
 
-    let mut temp = r_sum[r - 1];
-    for j in 0..c - 1 {
-        if temp < get!(mat_new, r - 1, j, c) {
-            //println!();
-            return 0.0;
-        } else {
-            temp -= get!(mat_new, r - 1, j, c);
-        }
-    }
-
-    set!(mat_new, r - 1, c - 1, c, temp);
-    //print!("{:?} ", &mat_new);
-
     let n = r_sum.iter().sum::<i32>();
 
     let mut p_1 = Quotient::new(n.try_into().unwrap(), &[], &[]);
 
-    p_1.mul_fact(r_sum);
-    p_1.mul_fact(c_sum);
+    p_1.mul_fact(&r_sum);
+    p_1.mul_fact(&c_sum);
 
     p_1.div_fact(&[n; 1]);
     p_1.div_fact(mat_new);
 
     let p_1_res = p_1.solve();
-    if p_1_res <= p_0 + 0.00000001 {
+    if p_1_res <= p_0 {
         //println!(" p={}", p_1_res);
         return p_1_res;
     } else {
-        //println!(" p={p_1_res} (DISCARDED)");
+        //println!(" p=0.0");
         return 0.0;
     }
 }
