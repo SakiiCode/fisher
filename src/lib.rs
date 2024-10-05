@@ -33,7 +33,6 @@ macro_rules! set {
         unsafe { *$arr.get_unchecked_mut($r * $cols + $c) = $val }
     };
 }
-
 fn fill(mat_new: &mut Vec<i32>, r_sum: &Vec<i32>, c_sum: &Vec<i32>, p_0: f64) -> f64 {
     let r = r_sum.len();
     let c = c_sum.len();
@@ -108,20 +107,26 @@ fn _dfs(
         max_2 -= get!(mat_new, i, yy, c);
     }
 
-    return (0..=min(max_1, max_2))
-        //.into_par_iter()
-        .map(|k| {
-            let mut mat_new2 = mat_new.clone();
-            set!(mat_new2, xx, yy, c, k);
-            if xx + 2 == r && yy + 2 == c {
-                return fill(&mut mat_new2, r_sum, c_sum, p_0);
-            } else if xx + 2 == r {
-                return _dfs(&mut mat_new2, 0, yy + 1, r_sum, c_sum, p_0);
-            } else {
-                return _dfs(&mut mat_new2, xx + 1, yy, r_sum, c_sum, p_0);
-            }
-        })
-        .sum();
+    let next_cycle = |k| {
+        let mut mat_new2 = mat_new.clone();
+        set!(mat_new2, xx, yy, c, k);
+        if xx + 2 == r && yy + 2 == c {
+            return fill(&mut mat_new2, r_sum, c_sum, p_0);
+        } else if xx + 2 == r {
+            return _dfs(&mut mat_new2, 0, yy + 1, r_sum, c_sum, p_0);
+        } else {
+            return _dfs(&mut mat_new2, xx + 1, yy, r_sum, c_sum, p_0);
+        }
+    };
+
+    if yy == 0 {
+        return (0..=min(max_1, max_2))
+            .into_par_iter()
+            .map(next_cycle)
+            .sum();
+    } else {
+        return (0..=min(max_1, max_2)).map(next_cycle).sum();
+    }
 }
 
 #[pyfunction]
