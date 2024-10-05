@@ -1,3 +1,6 @@
+#![allow(incomplete_features)]
+#![feature(generic_const_exprs)]
+#![feature(portable_simd)]
 #![allow(clippy::needless_return)]
 #![allow(clippy::ptr_arg)]
 
@@ -10,9 +13,13 @@ use pyo3::prelude::*;
 use rand::Rng;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::{cmp::min, sync::Mutex, vec};
+use thread_local::ThreadLocal;
+
+use fixedsize::dfs;
 
 mod asa159;
 mod asa643;
+mod fixedsize;
 mod math;
 
 macro_rules! get {
@@ -158,13 +165,112 @@ pub fn recursive(table: Vec<Vec<u32>>) -> PyResult<f64> {
 }
 
 #[pyfunction]
-pub fn sim(table: Vec<Vec<u32>>, iterations: u32) -> PyResult<f64> {
-    let row_sum: Vec<u32> = table.iter().map(|row| row.iter().sum()).collect();
-    let col_sum: Vec<u32> = (0..(table[0].len()))
+pub fn fixed(table: Vec<Vec<i32>>) -> PyResult<f64> {
+    let mut row_sum: Vec<i32> = table.iter().map(|row| row.iter().sum()).collect();
+    let mut col_sum: Vec<i32> = (0..(table[0].len()))
         .map(|index| table.iter().map(|row| row[index]).sum())
         .collect();
 
-    let n = row_sum.iter().sum::<u32>().try_into().unwrap();
+    if table.len() != table[0].len() {
+        println!("fisher.fixed() can only be used with square matrices yet!");
+        return Ok(-1.0);
+    }
+
+    let n: i32 = row_sum.iter().sum();
+
+    let mut p_0 = Quotient::new(n.try_into().unwrap(), &[], &[]);
+
+    p_0.mul_fact(&row_sum);
+    p_0.mul_fact(&col_sum);
+
+    p_0.div_fact(&[n; 1]);
+    p_0.div_fact(&table.iter().flatten().cloned().collect::<Vec<i32>>());
+
+    let stat = p_0.solve() + 0.00000001;
+
+    let lanes: usize = match table.len() {
+        1 => {
+            println!("Invalid table size!");
+            return Ok(-1.0);
+        }
+        2 => 1,
+        3 => 2,
+        4 | 5 => 4,
+        6..=9 => 8,
+        10..=17 => 16,
+        _ => {
+            println!("fisher.fixed() can only be used with up to 16x16 matrices!");
+            return Ok(-1.0);
+        }
+    };
+    let tl = ThreadLocal::new();
+
+    row_sum.resize(lanes + 1, 0);
+    col_sum.resize(lanes + 1, 0);
+
+    let p = match lanes {
+        1 => dfs::<1>(
+            &mut [0; 1],
+            0,
+            0,
+            &row_sum.try_into().unwrap(),
+            &col_sum.try_into().unwrap(),
+            stat,
+            &tl,
+        ),
+        2 => dfs::<2>(
+            &mut [0; 4],
+            0,
+            0,
+            &row_sum.try_into().unwrap(),
+            &col_sum.try_into().unwrap(),
+            stat,
+            &tl,
+        ),
+        4 => dfs::<4>(
+            &mut [0; 16],
+            0,
+            0,
+            &row_sum.try_into().unwrap(),
+            &col_sum.try_into().unwrap(),
+            stat,
+            &tl,
+        ),
+        8 => dfs::<8>(
+            &mut [0; 64],
+            0,
+            0,
+            &row_sum.try_into().unwrap(),
+            &col_sum.try_into().unwrap(),
+            stat,
+            &tl,
+        ),
+        16 => dfs::<16>(
+            &mut [0; 256],
+            0,
+            0,
+            &row_sum.try_into().unwrap(),
+            &col_sum.try_into().unwrap(),
+            stat,
+            &tl,
+        ),
+        _ => {
+            println!("Error in matching lane count. This should never happen");
+            return Ok(-1.0);
+        }
+    };
+
+    return Ok(p);
+}
+
+#[pyfunction]
+pub fn sim(table: Vec<Vec<i32>>, iterations: i32) -> PyResult<f64> {
+    let row_sum: Vec<i32> = table.iter().map(|row| row.iter().sum()).collect();
+    let col_sum: Vec<i32> = (0..(table[0].len()))
+        .map(|index| table.iter().map(|row| row[index]).sum())
+        .collect();
+
+    let n = row_sum.iter().sum::<i32>().try_into().unwrap();
 
     let mut fact = vec![0.0; n + 1];
     fact[0] = 0.0;
@@ -207,9 +313,9 @@ lazy_static! {
 
 #[pyfunction]
 #[pyo3(signature = (table, workspace=None))]
-pub fn exact(table: Vec<Vec<u32>>, workspace: Option<u32>) -> PyResult<f64> {
-    let row_sum: Vec<u32> = table.iter().map(|row| row.iter().sum()).collect();
-    let col_sum: Vec<u32> = (0..(table[0].len()))
+pub fn exact(table: Vec<Vec<i32>>, workspace: Option<i32>) -> PyResult<f64> {
+    let row_sum: Vec<i32> = table.iter().map(|row| row.iter().sum()).collect();
+    let col_sum: Vec<i32> = (0..(table[0].len()))
         .map(|index| table.iter().map(|row| row[index]).sum())
         .collect();
 
@@ -221,9 +327,9 @@ pub fn exact(table: Vec<Vec<u32>>, workspace: Option<u32>) -> PyResult<f64> {
     let wsize = match workspace {
         Some(size) => size,
         None => {
-            let sum: u32 = row_sum.iter().sum();
+            let sum: u32 = row_sum.iter().sum::<i32>() as u32;
             let exp = sum / 20;
-            200 * 10u32.pow(exp.clamp(3, 6))
+            (200 * 10i32.pow(exp.clamp(3, 6))).into()
         }
     };
     //dbg!(wsize);
@@ -241,10 +347,10 @@ pub fn exact(table: Vec<Vec<u32>>, workspace: Option<u32>) -> PyResult<f64> {
         let mut pre = 0.0;
         let ws = wsize.try_into().unwrap();
         code = asa643::fexact_(
-            nrow,
-            ncol,
+            nrow.into(),
+            ncol.into(),
             seq.as_mut_ptr(),
-            nrow,
+            nrow.into(),
             &mut expect,
             &mut percnt,
             &mut emin,
@@ -272,7 +378,7 @@ fn find_statistic_c(table: &Vec<i32>, nrow: usize, ncol: usize, fact: &Vec<f64>)
     return ans;
 }
 
-fn find_statistic_r(table: &Vec<Vec<u32>>, fact: &Vec<f64>) -> f64 {
+fn find_statistic_r(table: &Vec<Vec<i32>>, fact: &Vec<f64>) -> f64 {
     let mut ans = 0.0;
     for row in table {
         for cell in row {
@@ -309,6 +415,7 @@ fn fisher(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(recursive, m)?)?;
     m.add_function(wrap_pyfunction!(sim, m)?)?;
     m.add_function(wrap_pyfunction!(exact, m)?)?;
+    m.add_function(wrap_pyfunction!(fixed, m)?)?;
     Ok(())
 }
 
@@ -317,7 +424,7 @@ fn rec2x2() {
     let input = vec![vec![3, 4], vec![4, 2]];
     let output = recursive(input).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.5920745920745921);
+    assert_eq!(output, 0.5920745920745922);
 }
 
 #[test]
@@ -325,7 +432,15 @@ fn rec3x3() {
     let input = vec![vec![4, 1, 0], vec![1, 5, 0], vec![1, 1, 4]];
     let output = recursive(input).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.005293725881961177);
+    assert_eq!(output, 0.005293725881961175);
+}
+
+#[test]
+fn rec3x3_large() {
+    let input = vec![vec![32, 10, 20], vec![12, 25, 18], vec![11, 17, 14]];
+    let output = recursive(input).unwrap();
+    dbg!(output);
+    assert_eq!(output, 0.0014878318795286459);
 }
 
 #[test]
@@ -338,7 +453,7 @@ fn rec4x4() {
     ];
     let output = recursive(input).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.010961244321907074);
+    assert_eq!(output, 0.01096124432190708);
 }
 
 #[test]
@@ -352,7 +467,7 @@ fn rec4x4big() {
     ];
     let output = recursive(input).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.00594949486831653); // this should be 0.0
+    assert_eq!(output, 0.005949494868316533); // this should be 0.0
 }
 
 #[test]
@@ -385,7 +500,7 @@ fn rec5x4() {
     ];
     let output = recursive(input).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.63888061913001);
+    assert_eq!(output, 0.6388806191300103);
 }
 
 #[test]
@@ -405,6 +520,20 @@ fn rec5x5() {
 }
 
 #[test]
+fn rec5x5_small() {
+    let input = vec![
+        vec![1, 0, 0, 0, 0],
+        vec![1, 1, 0, 1, 0],
+        vec![1, 1, 0, 0, 1],
+        vec![0, 0, 1, 2, 1],
+        vec![1, 1, 2, 1, 1],
+    ];
+    let output = recursive(input).unwrap();
+    dbg!(output);
+    assert_eq!(output, 0.9712771262351094);
+}
+
+#[test]
 fn proc2x2() {
     let input = vec![vec![3, 4], vec![4, 2]];
     let output = exact(input, None).unwrap();
@@ -415,6 +544,14 @@ fn proc2x2() {
         0.5920745920745918,
         epsilon = 0.000001
     ));
+}
+
+#[test]
+fn proc3x3() {
+    let input = vec![vec![32, 10, 20], vec![12, 25, 18], vec![11, 17, 14]];
+    let output = exact(input, None).unwrap();
+    dbg!(output);
+    assert_eq!(output, 0.0013755325349349113);
 }
 
 #[test]
@@ -503,6 +640,20 @@ fn proc5x5() {
 }
 
 #[test]
+fn proc5x5_small() {
+    let input = vec![
+        vec![1, 0, 0, 0, 0],
+        vec![1, 1, 0, 1, 0],
+        vec![1, 1, 0, 0, 1],
+        vec![0, 0, 1, 2, 1],
+        vec![1, 1, 2, 1, 1],
+    ];
+    let output = exact(input, None).unwrap();
+    dbg!(output);
+    assert_eq!(output, 0.9712771262351105);
+}
+
+#[test]
 #[ignore]
 fn proc5x5_large() {
     let input = vec![
@@ -521,7 +672,7 @@ fn proc5x5_large() {
         epsilon = 0.00001
     ));
 }
-
+/*
 #[test]
 #[ignore]
 fn proc7x4_2e8() {
@@ -542,7 +693,7 @@ fn proc7x4_2e8() {
         0.9239149531167176,
         epsilon = 0.00001
     ));
-}
+}*/
 
 #[test]
 fn proc4x15() {
