@@ -78,10 +78,32 @@ fn proc2x2() {
 
 #[test]
 fn proc3x3() {
-    let input = vec![vec![32, 10, 20], vec![12, 25, 18], vec![11, 17, 14]];
+    let input = vec![vec![32, 10, 20], vec![20, 25, 18], vec![11, 17, 14]];
     let output = calculate(input, None).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.0013755325349349113);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.010967949934049852,
+        epsilon = 0.000001
+    ));
+}
+
+#[test]
+fn proc3x4_large() {
+    let input = vec![
+        vec![11, 12, 18, 15],
+        vec![15, 13, 13, 15],
+        vec![15, 19, 19, 15],
+    ];
+    let output = calculate(input, None).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.8821660735808727,
+        epsilon = 0.000001
+    ));
 }
 
 #[test]
@@ -103,7 +125,7 @@ fn proc4x4() {
 }
 
 #[test]
-fn proc4x4big() {
+fn proc4x4_large() {
     let input = vec![
         vec![28, 28, 28, 0],
         vec![0, 0, 0, 16],
@@ -116,24 +138,7 @@ fn proc4x4big() {
 }
 
 #[test]
-fn proc3x4big() {
-    let input = vec![
-        vec![11, 12, 18, 15],
-        vec![15, 13, 13, 15],
-        vec![15, 19, 19, 15],
-    ];
-    let output = calculate(input, None).unwrap();
-    dbg!(output);
-    assert!(float_cmp::approx_eq!(
-        f64,
-        output,
-        0.8821660735808727,
-        epsilon = 0.000001
-    ));
-}
-
-#[test]
-fn proc4x5big() {
+fn proc4x5_large() {
     let input = vec![
         vec![8, 3, 5, 5, 6],
         vec![4, 3, 8, 6, 5],
@@ -159,11 +164,11 @@ fn proc5x5() {
         vec![1, 1, 1, 2, 0],
         vec![1, 1, 0, 0, 3],
     ];
-    let result = calculate(input, None).unwrap();
-    dbg!(result);
+    let output = calculate(input, None).unwrap();
+    dbg!(output);
     assert!(float_cmp::approx_eq!(
         f64,
-        result,
+        output,
         0.22200753799676337,
         epsilon = 0.000001
     ));
@@ -180,7 +185,12 @@ fn proc5x5_small() {
     ];
     let output = calculate(input, None).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.9712771262351105);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.9712771262351103,
+        epsilon = 0.000001
+    ));
 }
 
 #[test]
@@ -199,34 +209,12 @@ fn proc5x5_large() {
         f64,
         result,
         0.26314046636138944,
-        epsilon = 0.00001
+        epsilon = 0.000001
     ));
 }
-/*
-#[test]
-#[ignore]
-fn proc7x4_2e8() {
-    let input = vec![
-        vec![41, 22, 18, 5],
-        vec![5, 3, 3, 0],
-        vec![20, 9, 9, 0],
-        vec![10, 4, 5, 3],
-        vec![16, 6, 6, 1],
-        vec![13, 8, 5, 2],
-        vec![19, 12, 12, 6],
-    ];
-    let result = calculate(input, None).unwrap();
-    dbg!(result);
-    assert!(float_cmp::approx_eq!(
-        f64,
-        result,
-        0.9239149531167176,
-        epsilon = 0.00001
-    ));
-}*/
 
 #[test]
-fn proc4x15() {
+fn proc4x15_error() {
     let input = vec![
         vec![23, 22, 13, 22, 19, 16, 22, 22, 24, 20, 14, 16, 19, 16, 19],
         vec![26, 20, 6, 20, 13, 12, 21, 18, 19, 14, 14, 14, 18, 11, 14],
@@ -239,7 +227,7 @@ fn proc4x15() {
 }
 
 #[test]
-fn proc16x8() {
+fn proc16x8_error() {
     let input = vec![
         vec![0, 4, 1, 0, 0, 0, 1, 0],
         vec![0, 1, 0, 0, 0, 0, 0, 0],

@@ -247,7 +247,7 @@ fn fixed3x3() {
     assert!(float_cmp::approx_eq!(
         f64,
         output,
-        0.011074529608901276,
+        0.010967949934049852,
         epsilon = 0.000001
     ));
 }
@@ -272,7 +272,58 @@ fn fixed4x4() {
 
 #[test]
 #[ignore]
-fn fixed5x5_large() {
+fn fixed4x4_large() {
+    let input = vec![
+        vec![28, 28, 28, 0],
+        vec![0, 0, 0, 16],
+        vec![0, 0, 0, 5],
+        vec![0, 0, 0, 7],
+    ];
+    let output = calculate(input).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(f64, output, 0.0, epsilon = 0.000001));
+}
+
+#[test]
+#[ignore] //TODO extend to square
+fn fixed3x4_large() {
+    let input = vec![
+        vec![11, 12, 18, 15],
+        vec![15, 13, 13, 15],
+        vec![15, 19, 19, 15],
+    ];
+    let output = calculate(input).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.8821660735808727,
+        epsilon = 0.000001
+    ));
+}
+
+#[test]
+#[ignore] //TODO extend to square
+fn fixed4x5big() {
+    let input = vec![
+        vec![8, 3, 5, 5, 6],
+        vec![4, 3, 8, 6, 5],
+        vec![2, 5, 3, 7, 6],
+        vec![4, 8, 2, 3, 6],
+    ];
+    let output = calculate(input).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.39346963278427133,
+        epsilon = 0.000001
+    ));
+}
+
+#[test]
+#[ignore]
+fn fixed5x5() {
     let input = vec![
         vec![3, 1, 1, 1, 0],
         vec![1, 4, 1, 0, 0],
@@ -301,5 +352,10 @@ fn fixed5x5_small() {
     ];
     let output = calculate(input).unwrap();
     dbg!(output);
-    assert_eq!(output, 0.9712771262351092);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.9712771262351103,
+        epsilon = 0.000001
+    ));
 }

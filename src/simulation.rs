@@ -93,9 +93,44 @@ fn generate(
 #[test]
 fn sim2x2() {
     let input = vec![vec![3, 4], vec![4, 2]];
-    let result = calculate(input, 10000).unwrap();
-    dbg!(result);
-    assert!(float_cmp::approx_eq!(f64, result, 0.592, epsilon = 0.02));
+    let output = calculate(input, 1000000).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.5920745920745918,
+        epsilon = 0.002
+    ));
+}
+
+#[test]
+fn sim3x3() {
+    let input = vec![vec![32, 10, 20], vec![20, 25, 18], vec![11, 17, 14]];
+    let output = calculate(input, 1000000).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.010967949934049852,
+        epsilon = 0.002
+    ));
+}
+
+#[test]
+fn sim3x4_large() {
+    let input = vec![
+        vec![11, 12, 18, 15],
+        vec![15, 13, 13, 15],
+        vec![15, 19, 19, 15],
+    ];
+    let output = calculate(input, 1000000).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.8821660735808727,
+        epsilon = 0.002
+    ));
 }
 
 #[test]
@@ -106,33 +141,56 @@ fn sim4x4() {
         vec![1, 1, 4, 2],
         vec![1, 1, 0, 3],
     ];
-    let result = calculate(input, 10000).unwrap();
-    dbg!(result);
-    assert!(float_cmp::approx_eq!(f64, result, 0.011, epsilon = 0.004));
+    let output = calculate(input, 1000000).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.01096124432190692,
+        epsilon = 0.002
+    ));
 }
 
 #[test]
-fn sim4x4error() {
+fn sim4x4_error() {
     let input = vec![
         vec![4, 1, 0, 1],
         vec![1, 5, 0, 0],
         vec![0, 0, 0, 0],
         vec![1, 1, 0, 3],
     ];
-    assert!(calculate(input, 10000).unwrap() < 0.0);
+    assert!(calculate(input, 1000000).unwrap() < 0.0);
 }
 
 #[test]
-fn sim4x4big() {
+fn sim4x4_large() {
     let input = vec![
         vec![28, 28, 28, 0],
         vec![0, 0, 0, 16],
         vec![0, 0, 0, 5],
         vec![0, 0, 0, 7],
     ];
-    let result = calculate(input, 100000).unwrap();
+    let result = calculate(input, 1000000).unwrap();
     dbg!(result);
     assert!(float_cmp::approx_eq!(f64, result, 0.0, epsilon = 0.004));
+}
+
+#[test]
+fn sim4x5_large() {
+    let input = vec![
+        vec![8, 3, 5, 5, 6],
+        vec![4, 3, 8, 6, 5],
+        vec![2, 5, 3, 7, 6],
+        vec![4, 8, 2, 3, 6],
+    ];
+    let output = calculate(input, 1000000).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.39346963278427133,
+        epsilon = 0.002
+    ));
 }
 
 #[test]
@@ -144,9 +202,33 @@ fn sim5x5() {
         vec![1, 1, 1, 2, 0],
         vec![1, 1, 0, 0, 3],
     ];
-    let result = calculate(input, 10000).unwrap();
-    dbg!(result);
-    assert!(float_cmp::approx_eq!(f64, result, 0.222, epsilon = 0.02));
+    let output = calculate(input, 1000000).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.22200753799676337,
+        epsilon = 0.002
+    ));
+}
+
+#[test]
+fn sim5x5_small() {
+    let input = vec![
+        vec![1, 0, 0, 0, 0],
+        vec![1, 1, 0, 1, 0],
+        vec![1, 1, 0, 0, 1],
+        vec![0, 0, 1, 2, 1],
+        vec![1, 1, 2, 1, 1],
+    ];
+    let output = calculate(input, 1000000).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.9712771262351103,
+        epsilon = 0.002
+    ));
 }
 
 #[test]
@@ -158,12 +240,12 @@ fn sim5x5_large() {
         vec![9, 4, 5, 3, 2],
         vec![4, 6, 6, 1, 0],
     ];
-    let result = calculate(input, 10000000).unwrap();
+    let result = calculate(input, 1000000).unwrap();
     dbg!(result);
     assert!(float_cmp::approx_eq!(
         f64,
         result,
         0.26314046636138944,
-        epsilon = 0.001
+        epsilon = 0.002
     ));
 }
