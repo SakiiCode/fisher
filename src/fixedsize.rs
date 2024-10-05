@@ -2,6 +2,7 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::{
     cell::RefCell,
     cmp::min,
+    convert::Infallible,
     ops::SubAssign,
     simd::{num::SimdInt, LaneCount, Simd, SupportedLaneCount},
 };
@@ -125,4 +126,180 @@ where
     } else {
         return (0..=min(max_1, max_2)).map(next_cycle).sum();
     }
+}
+
+pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
+    let mut row_sum: Vec<i32> = table.iter().map(|row| row.iter().sum()).collect();
+    let mut col_sum: Vec<i32> = (0..(table[0].len()))
+        .map(|index| table.iter().map(|row| row[index]).sum())
+        .collect();
+
+    if table.len() != table[0].len() {
+        println!("fisher.calculate() can only be used with square matrices yet!");
+        return Ok(-1.0);
+    }
+
+    let n: i32 = row_sum.iter().sum();
+
+    let mut p_0 = Quotient::new(n.try_into().unwrap(), &[], &[]);
+
+    p_0.mul_fact(&row_sum);
+    p_0.mul_fact(&col_sum);
+
+    p_0.div_fact(&[n; 1]);
+    p_0.div_fact(&table.iter().flatten().cloned().collect::<Vec<i32>>());
+
+    let stat = p_0.solve() + f64::EPSILON;
+
+    let lanes: usize = match table.len() {
+        1 => {
+            println!("Invalid table size!");
+            return Ok(-1.0);
+        }
+        2 => 1,
+        3 => 2,
+        4 | 5 => 4,
+        6..=9 => 8,
+        10..=17 => 16,
+        _ => {
+            println!("fisher.calculate() can only be used with up to 16x16 matrices!");
+            return Ok(-1.0);
+        }
+    };
+    let tl = ThreadLocal::new();
+
+    row_sum.resize(lanes + 1, 0);
+    col_sum.resize(lanes + 1, 0);
+
+    let p = match lanes {
+        1 => dfs::<1>(
+            &mut [0; 1],
+            0,
+            0,
+            &row_sum.try_into().unwrap(),
+            &col_sum.try_into().unwrap(),
+            stat,
+            &tl,
+        ),
+        2 => dfs::<2>(
+            &mut [0; 4],
+            0,
+            0,
+            &row_sum.try_into().unwrap(),
+            &col_sum.try_into().unwrap(),
+            stat,
+            &tl,
+        ),
+        4 => dfs::<4>(
+            &mut [0; 16],
+            0,
+            0,
+            &row_sum.try_into().unwrap(),
+            &col_sum.try_into().unwrap(),
+            stat,
+            &tl,
+        ),
+        8 => dfs::<8>(
+            &mut [0; 64],
+            0,
+            0,
+            &row_sum.try_into().unwrap(),
+            &col_sum.try_into().unwrap(),
+            stat,
+            &tl,
+        ),
+        16 => dfs::<16>(
+            &mut [0; 256],
+            0,
+            0,
+            &row_sum.try_into().unwrap(),
+            &col_sum.try_into().unwrap(),
+            stat,
+            &tl,
+        ),
+        _ => {
+            println!("Error in matching lane count. This should never happen");
+            return Ok(-1.0);
+        }
+    };
+
+    return Ok(p);
+}
+
+#[test]
+fn fixed2x2() {
+    let input = vec![vec![3, 4], vec![4, 2]];
+    let output = calculate(input).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.5920745920745918,
+        epsilon = 0.000001
+    ));
+}
+
+#[test]
+fn fixed3x3() {
+    let input = vec![vec![32, 10, 20], vec![20, 25, 18], vec![11, 17, 14]];
+    let output = calculate(input).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.011074529608901276,
+        epsilon = 0.000001
+    ));
+}
+
+#[test]
+fn fixed4x4() {
+    let input = vec![
+        vec![4, 1, 0, 1],
+        vec![1, 5, 0, 0],
+        vec![1, 1, 4, 2],
+        vec![1, 1, 0, 3],
+    ];
+    let output = calculate(input).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.010961244321907074,
+        epsilon = 0.000001
+    ));
+}
+
+#[test]
+#[ignore]
+fn fixed5x5_large() {
+    let input = vec![
+        vec![3, 1, 1, 1, 0],
+        vec![1, 4, 1, 0, 0],
+        vec![2, 1, 3, 2, 0],
+        vec![1, 1, 1, 2, 0],
+        vec![1, 1, 0, 0, 3],
+    ];
+    let output = calculate(input).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.24678711559405725,
+        epsilon = 0.000001
+    ));
+}
+
+#[test]
+fn fixed5x5_small() {
+    let input = vec![
+        vec![1, 0, 0, 0, 0],
+        vec![1, 1, 0, 1, 0],
+        vec![1, 1, 0, 0, 1],
+        vec![0, 0, 1, 2, 1],
+        vec![1, 1, 2, 1, 1],
+    ];
+    let output = calculate(input).unwrap();
+    dbg!(output);
+    assert_eq!(output, 0.9712771262351092);
 }
