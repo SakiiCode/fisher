@@ -149,7 +149,7 @@ pub fn recursive(table: Vec<Vec<u32>>) -> PyResult<f64> {
     p_0.mul_fact(&row_sum);
     p_0.mul_fact(&col_sum);
 
-    p_0.div_fact(&[row_sum.iter().sum(); 1]);
+    p_0.div_fact(&[n; 1]);
     p_0.div_fact(&seq);
 
     let p = _dfs(&mut mat, 0, 0, &row_sum, &col_sum, p_0.solve() + 0.00000001);
@@ -659,3 +659,83 @@ fn sim5x5_large() {
         epsilon = 0.001
     ));
 }
+
+/*
+#[test]
+fn fixed2x2() {
+    let input = vec![vec![3, 4], vec![4, 2]];
+    let output = fixed(input).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.5920745920745918,
+        epsilon = 0.000001
+    ));
+}
+
+#[test]
+fn fixed3x3() {
+    let input = vec![vec![32, 10, 20], vec![20, 25, 18], vec![11, 17, 14]];
+    let output = fixed(input).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.011074529608901276,
+        epsilon = 0.000001
+    ));
+}
+
+#[test]
+fn fixed4x4() {
+    let input = vec![
+        vec![4, 1, 0, 1],
+        vec![1, 5, 0, 0],
+        vec![1, 1, 4, 2],
+        vec![1, 1, 0, 3],
+    ];
+    let output = fixed(input).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.010961244321907074,
+        epsilon = 0.000001
+    ));
+}
+
+#[test]
+#[ignore]
+fn fixed5x5_large() {
+    let input = vec![
+        vec![3, 1, 1, 1, 0],
+        vec![1, 4, 1, 0, 0],
+        vec![2, 1, 3, 2, 0],
+        vec![1, 1, 1, 2, 0],
+        vec![1, 1, 0, 0, 3],
+    ];
+    let output = fixed(input).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.24678711559405725,
+        epsilon = 0.000001
+    ));
+}
+
+#[test]
+fn fixed5x5_small() {
+    let input = vec![
+        vec![1, 0, 0, 0, 0],
+        vec![1, 1, 0, 1, 0],
+        vec![1, 1, 0, 0, 1],
+        vec![0, 0, 1, 2, 1],
+        vec![1, 1, 2, 1, 1],
+    ];
+    let output = fixed(input).unwrap();
+    dbg!(output);
+    assert_eq!(output, 0.9712771262351092);
+}
+*/
