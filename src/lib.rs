@@ -7,6 +7,7 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
+use core::f64;
 use lazy_static::lazy_static;
 use math::Quotient;
 use pyo3::prelude::*;
@@ -159,7 +160,14 @@ pub fn recursive(table: Vec<Vec<u32>>) -> PyResult<f64> {
     p_0.div_fact(&[n; 1]);
     p_0.div_fact(&seq);
 
-    let p = _dfs(&mut mat, 0, 0, &row_sum, &col_sum, p_0.solve() + 0.00000001);
+    let p = _dfs(
+        &mut mat,
+        0,
+        0,
+        &row_sum,
+        &col_sum,
+        p_0.solve() + f64::EPSILON,
+    );
 
     return Ok(p);
 }
@@ -186,7 +194,7 @@ pub fn fixed(table: Vec<Vec<i32>>) -> PyResult<f64> {
     p_0.div_fact(&[n; 1]);
     p_0.div_fact(&table.iter().flatten().cloned().collect::<Vec<i32>>());
 
-    let stat = p_0.solve() + 0.00000001;
+    let stat = p_0.solve() + f64::EPSILON;
 
     let lanes: usize = match table.len() {
         1 => {
@@ -285,7 +293,7 @@ pub fn sim(table: Vec<Vec<i32>>, iterations: i32) -> PyResult<f64> {
 
     let nrow = row_sum.len();
     let ncol = col_sum.len();
-    let statistic = find_statistic_r(&table, &fact) + 0.00000001;
+    let statistic = find_statistic_r(&table, &fact) + f64::EPSILON;
 
     let test = generate(&row_sum_i, &col_sum_i, &fact);
     if let Err(error) = test {
