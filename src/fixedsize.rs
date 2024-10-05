@@ -167,9 +167,8 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
         3 => 2,
         4 | 5 => 4,
         6..=9 => 8,
-        10..=17 => 16,
         _ => {
-            println!("ERROR: fisher.recursive() can only be used with up to 17x17 matrices!");
+            println!("ERROR: fisher.recursive() can only be used with up to 9x9 matrices!");
             return Ok(-1.0);
         }
     };
@@ -208,15 +207,6 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
         ),
         8 => dfs::<8>(
             &mut [0; 64],
-            0,
-            0,
-            &row_sum.try_into().unwrap(),
-            &col_sum.try_into().unwrap(),
-            stat,
-            &tl,
-        ),
-        16 => dfs::<16>(
-            &mut [0; 256],
             0,
             0,
             &row_sum.try_into().unwrap(),
@@ -376,7 +366,7 @@ fn fixed5x5_small() {
 }
 
 #[test]
-fn fixed18x8_error() {
+fn fixed10x8_error() {
     let input = vec![
         vec![0, 4, 1, 0, 0, 0, 1, 0],
         vec![0, 1, 0, 0, 0, 0, 0, 0],
@@ -388,14 +378,6 @@ fn fixed18x8_error() {
         vec![2, 7, 0, 0, 1, 4, 1, 1],
         vec![0, 1, 0, 0, 0, 0, 0, 0],
         vec![0, 1, 1, 0, 0, 1, 0, 0],
-        vec![0, 3, 1, 0, 0, 0, 1, 0],
-        vec![0, 0, 0, 0, 1, 0, 0, 0],
-        vec![0, 0, 0, 0, 0, 3, 0, 0],
-        vec![0, 1, 0, 0, 0, 0, 0, 0],
-        vec![1, 2, 1, 1, 0, 1, 0, 1],
-        vec![1, 0, 1, 0, 1, 3, 0, 0],
-        vec![0, 3, 1, 0, 0, 0, 1, 0],
-        vec![0, 5, 0, 0, 1, 0, 0, 0],
     ];
     let result = calculate(input).unwrap();
     dbg!(result);
