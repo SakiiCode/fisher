@@ -41,9 +41,7 @@ fn fill(mat_new: &mut Vec<i32>, r_sum: &Vec<i32>, c_sum: &Vec<i32>, p_0: f64) ->
 
     for i in 0..r - 1 {
         let mut temp = r_sum[i];
-        for j in 0..c - 1 {
-            temp -= get!(mat_new, i, j, c);
-        }
+        temp -= mat_new[i * c..(i + 1) * c].iter().sum::<i32>();
         set!(mat_new, i, c - 1, c, temp);
     }
     for j in 0..c - 1 {
@@ -125,15 +123,28 @@ fn _dfs(
 }
 
 #[pyfunction]
-pub fn recursive(table: Vec<Vec<i32>>) -> PyResult<f64> {
-    let row_sum: Vec<i32> = table.iter().map(|row| row.iter().sum()).collect();
+pub fn recursive(table: Vec<Vec<u32>>) -> PyResult<f64> {
+    let row_sum: Vec<i32> = table
+        .iter()
+        .map(|row| row.iter().map(|x| i32::try_from(*x).unwrap()).sum())
+        .collect();
     let col_sum: Vec<i32> = (0..(table[0].len()))
-        .map(|index| table.iter().map(|row| row[index]).sum())
+        .map(|index| {
+            table
+                .iter()
+                .map(|row| i32::try_from(row[index]).unwrap())
+                .sum()
+        })
         .collect();
 
     let mut mat = vec![0; col_sum.len() * row_sum.len()];
 
     let n = row_sum.iter().sum::<i32>();
+    let seq = &table
+        .iter()
+        .flatten()
+        .map(|x| i32::try_from(*x).unwrap())
+        .collect::<Vec<i32>>();
 
     let mut p_0 = Quotient::new(n.try_into().unwrap(), &[], &[]);
 
@@ -141,7 +152,7 @@ pub fn recursive(table: Vec<Vec<i32>>) -> PyResult<f64> {
     p_0.mul_fact(&col_sum);
 
     p_0.div_fact(&[n; 1]);
-    p_0.div_fact(&table.iter().flatten().map(|x| *x).collect::<Vec<i32>>());
+    p_0.div_fact(&seq);
 
     let p = _dfs(&mut mat, 0, 0, &row_sum, &col_sum, p_0.solve());
 
