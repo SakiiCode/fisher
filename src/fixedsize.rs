@@ -15,6 +15,7 @@ macro_rules! set {
     };
 }
 
+// faster if not inlined
 #[inline(never)]
 fn fill<const N: usize>(
     mat_new: &mut [i32; N * N],

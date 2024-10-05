@@ -24,14 +24,12 @@ impl Quotient {
         result
     }
 
-    #[inline(never)]
     pub fn mul_fact(&mut self, arr: &[i32]) {
         for x in arr {
             self.container.extend((1..=*x).map(|x| x as f64));
         }
     }
 
-    #[inline(never)]
     pub fn div_fact(&mut self, arr: &[i32]) {
         for x in arr {
             for i in 1..=*x {
@@ -45,12 +43,10 @@ impl Quotient {
         }
     }
 
-    #[inline(never)]
     pub fn solve(&mut self) -> f64 {
         self.solution
     }
 
-    #[inline(never)]
     pub fn clear(&mut self) {
         self.idx = self.initial_idx;
         self.solution = self.initial_sln;
