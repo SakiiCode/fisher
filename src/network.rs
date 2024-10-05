@@ -259,6 +259,29 @@ fn proc5x5_large() {
 }
 
 #[test]
+fn proc9x7() {
+    let input = vec![
+        vec![0, 0, 2, 0, 0, 0, 1],
+        vec![0, 1, 0, 0, 0, 0, 0],
+        vec![0, 0, 0, 0, 0, 0, 2],
+        vec![1, 2, 0, 0, 1, 0, 0],
+        vec![0, 0, 0, 0, 0, 0, 1],
+        vec![0, 0, 0, 0, 0, 0, 0],
+        vec![1, 2, 0, 0, 0, 0, 0],
+        vec![0, 0, 0, 0, 0, 0, 1],
+        vec![0, 1, 0, 0, 2, 1, 0],
+    ];
+    let output = calculate(input, None).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.11590654664515711,
+        epsilon = 0.000001
+    ));
+}
+
+#[test]
 fn proc4x15_error() {
     let input = vec![
         vec![23, 22, 13, 22, 19, 16, 22, 22, 24, 20, 14, 16, 19, 16, 19],

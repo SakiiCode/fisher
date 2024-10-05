@@ -300,3 +300,26 @@ fn sim5x5_large() {
         epsilon = 0.002
     ));
 }
+
+#[test]
+fn sim9x7() {
+    let input = vec![
+        vec![0, 0, 2, 0, 0, 0, 1],
+        vec![0, 1, 0, 0, 0, 0, 0],
+        vec![0, 0, 0, 0, 0, 0, 2],
+        vec![1, 2, 0, 0, 1, 0, 0],
+        vec![0, 0, 0, 0, 0, 0, 1],
+        vec![0, 0, 0, 0, 0, 0, 0],
+        vec![1, 2, 0, 0, 0, 0, 0],
+        vec![0, 0, 0, 0, 0, 0, 1],
+        vec![0, 1, 0, 0, 2, 1, 0],
+    ];
+    let output = calculate(input, 1000000).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.11590654664515711,
+        epsilon = 0.002
+    ));
+}

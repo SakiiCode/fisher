@@ -28,6 +28,7 @@ fn fill<const N: usize>(
 where
     LaneCount<N>: SupportedLaneCount,
 {
+    //print!("{:?} -> ", &mat_new);
     let mut r_vec_red: Simd<i32, N> = Simd::from_slice(c_sum);
 
     let mut r_vec = [Simd::from_array([0; N]); N];
@@ -41,7 +42,7 @@ where
     let mut r_last = r_sum[N];
 
     if r_last < r_red_sum {
-        //println!("");
+        //println!();
         return 0.0;
     }
     r_last -= r_red_sum;
@@ -361,6 +362,30 @@ fn fixed5x5_small() {
         f64,
         output,
         0.9712771262351103,
+        epsilon = 0.000001
+    ));
+}
+
+#[test]
+#[ignore]
+fn fixed9x7() {
+    let input = vec![
+        vec![0, 0, 2, 0, 0, 0, 1],
+        vec![0, 1, 0, 0, 0, 0, 0],
+        vec![0, 0, 0, 0, 0, 0, 2],
+        vec![1, 2, 0, 0, 1, 0, 0],
+        vec![0, 0, 0, 0, 0, 0, 1],
+        vec![0, 0, 0, 0, 0, 0, 0],
+        vec![1, 2, 0, 0, 0, 0, 0],
+        vec![0, 0, 0, 0, 0, 0, 1],
+        vec![0, 1, 0, 0, 2, 1, 0],
+    ];
+    let output = calculate(input).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.11590654664515711,
         epsilon = 0.000001
     ));
 }
