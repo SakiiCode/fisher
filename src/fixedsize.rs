@@ -19,7 +19,7 @@ macro_rules! set {
 // faster if not inlined
 #[inline(never)]
 fn fill<const N: usize>(
-    mat_new: &mut [i32; N * N],
+    mat_new: [i32; N * N],
     r_sum: &[i32; N + 1],
     c_sum: &[i32; N + 1],
     p_0: f64,
@@ -67,7 +67,7 @@ where
     let mut p_1 = (p_1_ref).borrow_mut();
     p_1.clear();
 
-    p_1.div_fact(mat_new);
+    p_1.div_fact(&mat_new);
     p_1.div_fact(r_vec_red.as_array());
 
     p_1.div_fact(c_vec_red.as_array());
@@ -85,7 +85,7 @@ where
 }
 
 pub fn dfs<const N: usize>(
-    mat_new: &mut [i32; N * N],
+    mat_new: [i32; N * N],
     xx: usize,
     yy: usize,
     r_sum: &[i32; N + 1],
@@ -111,11 +111,11 @@ where
         let mut mat_new2 = mat_new.clone();
         set!(mat_new2, xx, yy, c - 1, k);
         if xx + 2 == r && yy + 2 == c {
-            return fill::<N>(&mut mat_new2, r_sum, c_sum, p_0, tl);
+            return fill::<N>(mat_new2, r_sum, c_sum, p_0, tl);
         } else if xx + 2 == r {
-            return dfs::<N>(&mut mat_new2, 0, yy + 1, r_sum, c_sum, p_0, tl);
+            return dfs::<N>(mat_new2, 0, yy + 1, r_sum, c_sum, p_0, tl);
         } else {
-            return dfs::<N>(&mut mat_new2, xx + 1, yy, r_sum, c_sum, p_0, tl);
+            return dfs::<N>(mat_new2, xx + 1, yy, r_sum, c_sum, p_0, tl);
         }
     };
 
@@ -183,7 +183,7 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
 
     let p = match lanes {
         1 => dfs::<1>(
-            &mut [0; 1],
+            [0; 1],
             0,
             0,
             &row_sum.try_into().unwrap(),
@@ -192,7 +192,7 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
             &tl,
         ),
         2 => dfs::<2>(
-            &mut [0; 4],
+            [0; 4],
             0,
             0,
             &row_sum.try_into().unwrap(),
@@ -201,7 +201,7 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
             &tl,
         ),
         4 => dfs::<4>(
-            &mut [0; 16],
+            [0; 16],
             0,
             0,
             &row_sum.try_into().unwrap(),
@@ -210,7 +210,7 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
             &tl,
         ),
         8 => dfs::<8>(
-            &mut [0; 64],
+            [0; 64],
             0,
             0,
             &row_sum.try_into().unwrap(),
