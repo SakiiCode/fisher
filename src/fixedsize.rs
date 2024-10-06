@@ -178,6 +178,9 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
     row_sum.resize(lanes + 1, 0);
     col_sum.resize(lanes + 1, 0);
 
+    row_sum.sort();
+    col_sum.sort();
+
     let p = match lanes {
         1 => dfs::<1>(
             &mut [0; 1],
