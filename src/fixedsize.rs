@@ -317,7 +317,6 @@ fn fixed4x4() {
 }
 
 #[test]
-#[ignore]
 fn fixed4x4_large() {
     let input = vec![
         vec![28, 28, 28, 0],
@@ -332,6 +331,24 @@ fn fixed4x4_large() {
 
 #[test]
 #[ignore]
+fn fixed4x5_large() {
+    let input = vec![
+        vec![8, 3, 5, 5, 6],
+        vec![4, 3, 8, 6, 5],
+        vec![2, 5, 3, 7, 6],
+        vec![4, 8, 2, 3, 6],
+    ];
+    let output = calculate(input).unwrap();
+    dbg!(output);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.39346963278427133,
+        epsilon = 0.000001
+    ));
+}
+
+#[test]
 fn fixed5x5() {
     let input = vec![
         vec![3, 1, 1, 1, 0],
@@ -365,6 +382,26 @@ fn fixed5x5_small() {
         f64,
         output,
         0.9712771262351103,
+        epsilon = 0.000001
+    ));
+}
+
+#[test]
+#[ignore]
+fn fixed5x5_large() {
+    let input = vec![
+        vec![8, 8, 3, 5, 2],
+        vec![5, 3, 3, 0, 2],
+        vec![8, 9, 9, 0, 0],
+        vec![9, 4, 5, 3, 2],
+        vec![4, 6, 6, 1, 0],
+    ];
+    let result = calculate(input).unwrap();
+    dbg!(result);
+    assert!(float_cmp::approx_eq!(
+        f64,
+        result,
+        0.26314046636138944,
         epsilon = 0.000001
     ));
 }

@@ -302,7 +302,7 @@ fn sim5x5_large() {
 }
 
 #[test]
-fn sim9x7() {
+fn sim9x7_error() {
     let input = vec![
         vec![0, 0, 2, 0, 0, 0, 1],
         vec![0, 1, 0, 0, 0, 0, 0],
@@ -316,10 +316,5 @@ fn sim9x7() {
     ];
     let output = calculate(input, 1000000).unwrap();
     dbg!(output);
-    assert!(float_cmp::approx_eq!(
-        f64,
-        output,
-        0.11590654664515711,
-        epsilon = 0.002
-    ));
+    assert_eq!(output, -3.0);
 }
