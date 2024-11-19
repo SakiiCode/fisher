@@ -53,12 +53,11 @@ where
     let col_simd = Simd::from(col);
     c_vec_red.sub_assign(col_simd);
 
-    // r_sum is N+1 length, SIMD cannot be used
-    let n: i32 = r_sum.iter().sum();
-
     let p_1_ref = tl.get_or(|| {
-        let mut init_n = Vec::with_capacity(2 * (N + 1));
+        // r_sum is N+1 length, SIMD cannot be used
+        let n: i32 = r_sum.iter().sum();
         let init_d = vec![n];
+        let mut init_n = Vec::with_capacity(2 * (N + 1) + 1);
         init_n.extend_from_slice(r_sum);
         init_n.extend_from_slice(c_sum);
         Box::new(RefCell::new(Quotient::new(n as usize, &init_n, &init_d)))
@@ -120,10 +119,7 @@ where
     };
 
     if yy == 0 {
-        return (0..=min(max_1, max_2))
-            .into_par_iter()
-            .map(next_cycle)
-            .sum();
+        return (0..=min(max_1, max_2)).into_par_iter().map(next_cycle).sum();
     } else {
         return (0..=min(max_1, max_2)).map(next_cycle).sum();
     }
