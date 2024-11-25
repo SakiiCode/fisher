@@ -1,9 +1,20 @@
+use std::{
+    ops::{AddAssign, DivAssign},
+    simd::{num::SimdFloat, Simd},
+};
+
+const N: i32 = 4;
+const N_U: usize = 4;
+const N_F: f64 = 4.0;
+const DEFAULT_SIMD: [f64; 4] = [1.0, 2.0, 3.0, 4.0];
+
 pub struct Quotient {
     container: Vec<f64>,
     initial_sln: f64,
     initial_idx: usize,
     idx: usize,
     solution: f64,
+    offset_simd: Simd<f64, N_U>,
 }
 
 impl Quotient {
@@ -16,6 +27,7 @@ impl Quotient {
             initial_idx: 0,
             idx: 0,
             solution: 1.0,
+            offset_simd: Simd::splat(N_F),
         };
         result.mul_fact(init_n);
         result.div_fact(init_d);
@@ -32,18 +44,23 @@ impl Quotient {
 
     pub fn div_fact(&mut self, arr: &[i32]) {
         for x in arr {
-            for i in 1..=*x {
-                unsafe {
-                    let num = *self.container.get_unchecked(self.idx);
-                    self.solution *= num / i as f64;
-                }
-
-                self.idx += 1;
+            let mut i = 0;
+            let mut d_simd: Simd<f64, N_U> = Simd::from_array(DEFAULT_SIMD);
+            while i < *x {
+                let mut num = Simd::load_or(
+                    &self.container[(self.idx + i as usize)..(self.idx + *x as usize)],
+                    d_simd,
+                );
+                num.div_assign(d_simd);
+                self.solution *= num.reduce_product();
+                d_simd.add_assign(self.offset_simd);
+                i += N;
             }
+            self.idx += *x as usize;
         }
     }
 
-    pub fn solve(&mut self) -> f64 {
+    pub fn solve(&self) -> f64 {
         self.solution
     }
 
@@ -71,12 +88,7 @@ fn test1() {
 
     let result = q.solve();
 
-    assert!(float_cmp::approx_eq!(
-        f64,
-        result,
-        1.85572e-5,
-        epsilon = 1e-9
-    ));
+    assert!(float_cmp::approx_eq!(f64, result, 1.85572e-5, epsilon = 1e-9));
 
     let mut q = Quotient::new(19, &[7, 6, 6, 6], &[13]);
 
@@ -84,6 +96,22 @@ fn test1() {
     q.div_fact(&[6]);
 
     assert!(float_cmp::approx_eq!(f64, q.solve(), 1.0 / 1716.0));
+}
+
+#[test]
+fn test2() {
+    let q = Quotient::new(3, &vec![3], &vec![2, 1, 0]);
+    let s = q.solve();
+    assert_eq!(s, 3.0);
+}
+
+#[test]
+fn test3() {
+    let mut q = Quotient::new(3, &[], &vec![]);
+    q.mul_fact(&[3]);
+    q.div_fact(&[2, 1, 0]);
+    let s = q.solve();
+    assert_eq!(s, 3.0);
 }
 
 /*
