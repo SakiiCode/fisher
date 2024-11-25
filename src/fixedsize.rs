@@ -71,7 +71,7 @@ where
 
     p_1.div_fact(c_vec_red.as_array());
 
-    p_1.div_fact(&[r_last; 1]);
+    p_1.div_fact(&[r_last]);
 
     let p_1_res = p_1.solve();
     if p_1_res <= p_0 {
@@ -111,14 +111,31 @@ where
         set!(mat_new2, xx, yy, c - 1, k);
         if xx + 2 == r && yy + 2 == c {
             return fill::<N>(mat_new2, r_sum, c_sum, p_0, tl);
-        } else if xx + 2 == r {
-            return dfs::<N>(mat_new2, 0, yy + 1, r_sum, c_sum, p_0, tl);
-        } else {
-            return dfs::<N>(mat_new2, xx + 1, yy, r_sum, c_sum, p_0, tl);
         }
+        let mut next_x = xx;
+        let mut next_y = yy;
+        let yellow = ((xx + yy) % 2) == 0;
+        if (yellow && xx == 0) || (!yellow && xx + 2 == c) {
+            //print!("red ");
+            next_y += 1;
+        } else if (!yellow && yy == 0) || (yellow && yy + 2 == r) {
+            //print!("blue ");
+            next_x += 1;
+        } else if yellow {
+            //print!("yellow ");
+            next_y += 1;
+            next_x -= 1;
+        } else {
+            //print!("green ");
+            next_x += 1;
+            next_y -= 1
+        }
+        //println!("{},{}", next_x, next_y);
+
+        return dfs::<N>(mat_new2, next_x, next_y, r_sum, c_sum, p_0, tl);
     };
 
-    if yy == 0 {
+    if xx == 0 {
         return (0..=min(max_1, max_2)).into_par_iter().map(next_cycle).sum();
     } else {
         return (0..=min(max_1, max_2)).map(next_cycle).sum();
