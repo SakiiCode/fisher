@@ -3,6 +3,7 @@ use std::{
     cell::RefCell,
     cmp::min,
     convert::Infallible,
+    num::NonZero,
     ops::SubAssign,
     simd::{num::SimdInt, LaneCount, Simd, SupportedLaneCount},
 };
@@ -91,6 +92,8 @@ pub fn dfs<const N: usize>(
     c_sum: &[i32; N + 1],
     p_0: f64,
     tl: &ThreadLocal<Box<RefCell<Quotient>>>,
+    threads: i32,
+    max_threads: i32,
 ) -> f64
 where
     LaneCount<N>: SupportedLaneCount,
@@ -105,6 +108,8 @@ where
         max_2 -= mat_new[index]; //get!(mat_new, i, yy, c - 1);
     }
 
+    let max = min(max_1, max_2);
+
     let next_cycle = |k| {
         let mut mat_new2 = mat_new.clone();
         set!(mat_new2, xx, yy, c - 1, k);
@@ -113,13 +118,23 @@ where
         }
 
         let (next_x, next_y) = next_cell(xx, yy, r, c);
-        return dfs::<N>(mat_new2, next_x, next_y, r_sum, c_sum, p_0, tl);
+        return dfs::<N>(
+            mat_new2,
+            next_x,
+            next_y,
+            r_sum,
+            c_sum,
+            p_0,
+            tl,
+            threads + max,
+            max_threads,
+        );
     };
 
-    if xx == 0 {
-        return (0..=min(max_1, max_2)).into_par_iter().map(next_cycle).sum();
+    if threads < max_threads {
+        return (0..=max).into_par_iter().map(next_cycle).sum();
     } else {
-        return (0..=min(max_1, max_2)).map(next_cycle).sum();
+        return (0..=max).map(next_cycle).sum();
     }
 }
 
@@ -198,6 +213,10 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
     row_sum.sort();
     col_sum.sort();
 
+    let max_threads = std::thread::available_parallelism()
+        .unwrap_or(NonZero::new(12).unwrap())
+        .get() as i32;
+
     let p = match lanes {
         1 => dfs::<1>(
             [0; 1],
@@ -207,6 +226,8 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
             &col_sum.try_into().unwrap(),
             stat,
             &tl,
+            0,
+            max_threads,
         ),
         2 => dfs::<2>(
             [0; 4],
@@ -216,6 +237,8 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
             &col_sum.try_into().unwrap(),
             stat,
             &tl,
+            0,
+            max_threads,
         ),
         4 => dfs::<4>(
             [0; 16],
@@ -225,6 +248,8 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
             &col_sum.try_into().unwrap(),
             stat,
             &tl,
+            0,
+            max_threads,
         ),
         8 => dfs::<8>(
             [0; 64],
@@ -234,6 +259,8 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
             &col_sum.try_into().unwrap(),
             stat,
             &tl,
+            0,
+            max_threads,
         ),
         _ => {
             println!("Error in matching lane count. This should never happen");
