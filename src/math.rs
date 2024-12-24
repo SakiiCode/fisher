@@ -44,19 +44,18 @@ impl Quotient {
 
     pub fn div_fact(&mut self, arr: &[i32]) {
         for x in arr {
-            let mut i = 0;
+            let mut i = 0usize;
+            let max = *x as usize;
             let mut d_simd: Simd<f64, N_U> = Simd::from_array(DEFAULT_SIMD);
-            while i < *x {
-                let mut num = Simd::load_or(
-                    &self.container[(self.idx + i as usize)..(self.idx + *x as usize)],
-                    d_simd,
-                );
+            while i < max {
+                let slice = &self.container[(self.idx + i)..(self.idx + max)];
+                let mut num = Simd::load_or(slice, d_simd);
                 num.div_assign(d_simd);
                 self.solution *= num.reduce_product();
                 d_simd.add_assign(self.offset_simd);
-                i += N;
+                i += N_U;
             }
-            self.idx += *x as usize;
+            self.idx += max;
         }
     }
 
