@@ -96,11 +96,10 @@ where
     LaneCount<N>: SupportedLaneCount,
 {
     let r = r_sum.len();
-    let c = c_sum.len();
-    // do not put this below max_1
-    let mut max_2 = c_sum[yy];
-
     let max_1 = r_sum[xx] - Simd::from_slice(&mat_new[xx * N..]).reduce_sum();
+
+    let c = c_sum.len();
+    let mut max_2 = c_sum[yy];
 
     for index in (yy..N * N).step_by(N) {
         max_2 -= mat_new[index]; //get!(mat_new, i, yy, c - 1);
@@ -112,26 +111,8 @@ where
         if xx + 2 == r && yy + 2 == c {
             return fill::<N>(mat_new2, r_sum, c_sum, p_0, tl);
         }
-        let mut next_x = xx;
-        let mut next_y = yy;
-        let yellow = ((xx + yy) % 2) == 0;
-        if (yellow && xx == 0) || (!yellow && xx + 2 == c) {
-            //print!("red ");
-            next_y += 1;
-        } else if (!yellow && yy == 0) || (yellow && yy + 2 == r) {
-            //print!("blue ");
-            next_x += 1;
-        } else if yellow {
-            //print!("yellow ");
-            next_y += 1;
-            next_x -= 1;
-        } else {
-            //print!("green ");
-            next_x += 1;
-            next_y -= 1
-        }
-        //println!("{},{}", next_x, next_y);
 
+        let (next_x, next_y) = next_cell(xx, yy, r, c);
         return dfs::<N>(mat_new2, next_x, next_y, r_sum, c_sum, p_0, tl);
     };
 
@@ -140,6 +121,29 @@ where
     } else {
         return (0..=min(max_1, max_2)).map(next_cycle).sum();
     }
+}
+
+fn next_cell(xx: usize, yy: usize, r: usize, c: usize) -> (usize, usize) {
+    let mut next_x = xx;
+    let mut next_y = yy;
+    let yellow = ((xx + yy) % 2) == 0;
+    if (yellow && xx == 0) || (!yellow && xx + 2 == c) {
+        //print!("red ");
+        next_y += 1;
+    } else if (!yellow && yy == 0) || (yellow && yy + 2 == r) {
+        //print!("blue ");
+        next_x += 1;
+    } else if yellow {
+        //print!("yellow ");
+        next_y += 1;
+        next_x -= 1;
+    } else {
+        //print!("green ");
+        next_x += 1;
+        next_y -= 1
+    }
+    //println!("{},{}", next_x, next_y);
+    return (next_x, next_y);
 }
 
 pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
