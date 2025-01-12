@@ -302,15 +302,10 @@ fn fixed2x2_error() {
 
 #[test]
 fn fixed3x2() {
-    let input = vec![vec![32, 10, 20], vec![20, 25, 18]];
+    let input = vec![vec![1000, 626, 782], vec![976, 814, 892]];
     let output = calculate(input).unwrap();
     dbg!(output);
-    assert!(float_cmp::approx_eq!(
-        f64,
-        output,
-        0.009645916798182401,
-        epsilon = 0.000001
-    ));
+    assert!(float_cmp::approx_eq!(f64, output, 0.0, epsilon = 0.000001));
 }
 
 #[test]

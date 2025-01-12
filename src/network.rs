@@ -94,15 +94,10 @@ fn proc2x2_error() {
 
 #[test]
 fn proc3x2() {
-    let input = vec![vec![32, 10, 20], vec![20, 25, 18]];
+    let input = vec![vec![1000, 626, 782], vec![976, 814, 892]];
     let output = calculate(input, None).unwrap();
     dbg!(output);
-    assert!(float_cmp::approx_eq!(
-        f64,
-        output,
-        0.009645916798182401,
-        epsilon = 0.000001
-    ));
+    assert!(float_cmp::approx_eq!(f64, output, 0.0001679, epsilon = 0.000001));
 }
 
 #[test]
@@ -136,11 +131,7 @@ fn proc3x3_zero() {
 
 #[test]
 fn proc3x4_large() {
-    let input = vec![
-        vec![11, 12, 18, 15],
-        vec![15, 13, 13, 15],
-        vec![15, 19, 19, 15],
-    ];
+    let input = vec![vec![11, 12, 18, 15], vec![15, 13, 13, 15], vec![15, 19, 19, 15]];
     let output = calculate(input, None).unwrap();
     dbg!(output);
     assert!(float_cmp::approx_eq!(

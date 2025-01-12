@@ -3,7 +3,6 @@ use std::{
     simd::{num::SimdFloat, Simd},
 };
 
-const N: i32 = 4;
 const N_U: usize = 4;
 const N_F: f64 = 4.0;
 const DEFAULT_SIMD: [f64; 4] = [1.0, 2.0, 3.0, 4.0];
