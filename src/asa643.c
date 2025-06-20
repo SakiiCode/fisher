@@ -637,7 +637,7 @@ L50:
     if (*itop > ldstp)
     {
         prterr_(&c__7, "LDSTP is too small for this problem.  It is not poss"
-                       "ible to estimate the value of LDSTP rerquired, but twice the"
+                       "ible to estimate the value of LDSTP required, but twice the"
                        " current value may be sufficient.");
         goto L9000;
     }
@@ -1750,7 +1750,7 @@ L150:
             }
         }
 
-        prterr_(&c__6, "LDKEY is too small.  It is not possible to give thev"
+        prterr_(&c__6, "LDKEY is too small.  It is not possible to give the v"
                        "alue of LDKEY required, but you could try doubling LDKEY (an"
                        "d possibly LDSTP).");
     }
