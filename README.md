@@ -60,6 +60,22 @@ rpy2            0.9981  in 19.38s
 -----------
 ```
 
+## Building
+
+**Windows**
+```sh
+python3 -m venv .env
+.env/Scripts/Activate.ps1
+maturin develop --release
+```
+
+**Linux**
+```sh
+python3 -m venv .env
+source .env/bin/activate
+maturin develop --release
+```
+
 ## References
 
 Contingency table generator (ASA159): https://people.sc.fsu.edu/~jburkardt/c_src/asa159/asa159.html
