@@ -41,22 +41,22 @@ Calculate Fisher's exact test by a multithreaded SIMD recursive algorithm. Despi
 
 See [benchmark.py](https://github.com/SakiiCode/fisher/blob/main/benchmark.py)
 
-_AMD Ryzen 5600X running Linux Mint 21.3_
+_AMD Ryzen 5600X running LMDE 7_
 
 ```
 -- EXACT TEST --
-fisher-rxc      0.2631  in 21.11s
-rpy2            0.2631  in 26.15s
+fisher-rxc      0.2631  in 20.67s
+rpy2            0.2631  in 21.14s
 -----------
-fisher-rxc      0.9981  in 4.95s
-rpy2            0.9981  in 6.96s
+fisher-rxc      0.9981  in 4.68s
+rpy2            0.9981  in 5.31s
 -----------
 -- MONTE-CARLO SIMULATION --
-fisher-rxc      0.2631  in 0.60s
-rpy2            0.2630  in 16.10s
+fisher-rxc      0.2631  in 0.70s
+rpy2            0.2630  in 29.26s
 -----------
-fisher-rxc      0.9981  in 0.62s
-rpy2            0.9981  in 19.38s
+fisher-rxc      0.9981  in 0.73s
+rpy2            0.9981  in 35.55s
 -----------
 ```
 
