@@ -45,18 +45,18 @@ _AMD Ryzen 5600X running LMDE 7_
 
 ```
 -- EXACT TEST --
-fisher-rxc      0.2631  in 20.67s
-rpy2            0.2631  in 21.14s
+fisher-rxc      0.2631  in 20.29s
+rpy2            0.2631  in 20.62s
 -----------
-fisher-rxc      0.9981  in 4.68s
-rpy2            0.9981  in 5.31s
+fisher-rxc      0.9981  in 4.67s
+rpy2            0.9981  in 5.28s
 -----------
 -- MONTE-CARLO SIMULATION --
-fisher-rxc      0.2631  in 0.70s
-rpy2            0.2630  in 29.26s
+fisher-rxc      0.2630  in 0.65s
+rpy2            0.2632  in 30.33s
 -----------
-fisher-rxc      0.9981  in 0.73s
-rpy2            0.9981  in 35.55s
+fisher-rxc      0.9981  in 0.68s
+rpy2            0.9981  in 37.14s
 -----------
 ```
 
@@ -73,13 +73,13 @@ maturin develop --release
 **Linux**
 
 ```sh
-sudo apt install python3-maturin
 python3 -m venv .env
 source .env/bin/activate
+pip3 install maturin[patchelf]
 maturin develop --release
 # For benchmarks:
 sudo apt install r-base
-pip install numpy rpy2
+pip install rpy2
 ```
 
 ## References
