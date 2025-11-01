@@ -1,0 +1,3 @@
+[env]
+NEXTEST_PROFILE = "release"
+RUST_TEST_THREADS = 1
