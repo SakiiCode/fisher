@@ -1,10 +1,14 @@
 use core::f64;
 use std::convert::Infallible;
 
-use rand::Rng;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 use crate::asa159;
+
+#[cfg(test)]
+const SIM_PRECISION: f64 = 0.002;
+#[cfg(test)]
+const SIM_ITERATIONS: i32 = 1000000;
 
 pub fn calculate(table: Vec<Vec<i32>>, iterations: i32) -> Result<f64, Infallible> {
     let row_sum: Vec<i32> = table.iter().map(|row| row.iter().sum()).collect();
@@ -80,16 +84,12 @@ fn generate(
     col_sum: &Vec<i32>,
     fact: &Vec<f64>,
 ) -> Result<Vec<i32>, (i32, &'static str)> {
-    let mut rng = rand::thread_rng();
-    let mut seed = rng.gen::<i32>();
-
     let result = asa159::rcont2(
         i32::try_from(row_sum.len()).unwrap(),
         i32::try_from(col_sum.len()).unwrap(),
         row_sum,
         col_sum,
         &mut 0,
-        &mut seed,
         fact,
     );
 
@@ -99,7 +99,7 @@ fn generate(
 #[test]
 fn sim1x1_error() {
     let input = vec![vec![5]];
-    let output = calculate(input, 1000000).unwrap();
+    let output = calculate(input, SIM_ITERATIONS).unwrap();
     dbg!(output);
     assert_eq!(output, -1.0);
 }
@@ -107,20 +107,20 @@ fn sim1x1_error() {
 #[test]
 fn sim2x2() {
     let input = vec![vec![3, 4], vec![4, 2]];
-    let output = calculate(input, 1000000).unwrap();
+    let output = calculate(input, SIM_ITERATIONS).unwrap();
     dbg!(output);
     assert!(float_cmp::approx_eq!(
         f64,
         output,
         0.5920745920745918,
-        epsilon = 0.002
+        epsilon = SIM_PRECISION
     ));
 }
 
 #[test]
 fn sim2x2_error() {
     let input = vec![vec![3, 4], vec![4, -2]];
-    let output = calculate(input, 1000000).unwrap();
+    let output = calculate(input, SIM_ITERATIONS).unwrap();
     dbg!(output);
     assert_eq!(output, -1.0);
 }
@@ -128,33 +128,33 @@ fn sim2x2_error() {
 #[test]
 fn sim3x2() {
     let input = vec![vec![32, 10, 20], vec![20, 25, 18]];
-    let output = calculate(input, 1000000).unwrap();
+    let output = calculate(input, SIM_ITERATIONS).unwrap();
     dbg!(output);
     assert!(float_cmp::approx_eq!(
         f64,
         output,
         0.009645916798182401,
-        epsilon = 0.002
+        epsilon = SIM_PRECISION
     ));
 }
 
 #[test]
 fn sim3x3() {
     let input = vec![vec![32, 10, 20], vec![20, 25, 18], vec![11, 17, 14]];
-    let output = calculate(input, 1000000).unwrap();
+    let output = calculate(input, SIM_ITERATIONS).unwrap();
     dbg!(output);
     assert!(float_cmp::approx_eq!(
         f64,
         output,
         0.010967949934049852,
-        epsilon = 0.002
+        epsilon = SIM_PRECISION
     ));
 }
 
 #[test]
 fn sim3x3_unit() {
     let input = vec![vec![1, 0, 0], vec![0, 1, 0], vec![0, 0, 1]];
-    let output = calculate(input, 1000000).unwrap();
+    let output = calculate(input, SIM_ITERATIONS).unwrap();
     dbg!(output);
     assert_eq!(output, 1.0);
 }
@@ -162,7 +162,7 @@ fn sim3x3_unit() {
 #[test]
 fn sim3x3_zero() {
     let input = vec![vec![0, 0, 0], vec![0, 0, 0], vec![0, 0, 0]];
-    let output = calculate(input, 1000000).unwrap();
+    let output = calculate(input, SIM_ITERATIONS).unwrap();
     dbg!(output);
     assert_eq!(output, -3.0);
 }
@@ -174,13 +174,13 @@ fn sim3x4_large() {
         vec![15, 13, 13, 15],
         vec![15, 19, 19, 15],
     ];
-    let output = calculate(input, 1000000).unwrap();
+    let output = calculate(input, SIM_ITERATIONS).unwrap();
     dbg!(output);
     assert!(float_cmp::approx_eq!(
         f64,
         output,
         0.8821660735808727,
-        epsilon = 0.002
+        epsilon = SIM_PRECISION
     ));
 }
 
@@ -192,13 +192,13 @@ fn sim4x4() {
         vec![1, 1, 4, 2],
         vec![1, 1, 0, 3],
     ];
-    let output = calculate(input, 1000000).unwrap();
+    let output = calculate(input, SIM_ITERATIONS).unwrap();
     dbg!(output);
     assert!(float_cmp::approx_eq!(
         f64,
         output,
         0.01096124432190692,
-        epsilon = 0.002
+        epsilon = SIM_PRECISION
     ));
 }
 
@@ -221,7 +221,7 @@ fn sim4x4_large() {
         vec![0, 0, 0, 5],
         vec![0, 0, 0, 7],
     ];
-    let result = calculate(input, 1000000).unwrap();
+    let result = calculate(input, SIM_ITERATIONS).unwrap();
     dbg!(result);
     assert!(float_cmp::approx_eq!(f64, result, 0.0, epsilon = 0.004));
 }
@@ -234,13 +234,13 @@ fn sim4x5_large() {
         vec![2, 5, 3, 7, 6],
         vec![4, 8, 2, 3, 6],
     ];
-    let output = calculate(input, 1000000).unwrap();
+    let output = calculate(input, SIM_ITERATIONS).unwrap();
     dbg!(output);
     assert!(float_cmp::approx_eq!(
         f64,
         output,
         0.39346963278427133,
-        epsilon = 0.002
+        epsilon = SIM_PRECISION
     ));
 }
 
@@ -253,13 +253,13 @@ fn sim5x5() {
         vec![1, 1, 1, 2, 0],
         vec![1, 1, 0, 0, 3],
     ];
-    let output = calculate(input, 1000000).unwrap();
+    let output = calculate(input, SIM_ITERATIONS).unwrap();
     dbg!(output);
     assert!(float_cmp::approx_eq!(
         f64,
         output,
         0.22200753799676337,
-        epsilon = 0.002
+        epsilon = SIM_PRECISION
     ));
 }
 
@@ -272,13 +272,13 @@ fn sim5x5_small() {
         vec![0, 0, 1, 2, 1],
         vec![1, 1, 2, 1, 1],
     ];
-    let output = calculate(input, 1000000).unwrap();
+    let output = calculate(input, SIM_ITERATIONS).unwrap();
     dbg!(output);
     assert!(float_cmp::approx_eq!(
         f64,
         output,
         0.9712771262351103,
-        epsilon = 0.002
+        epsilon = SIM_PRECISION
     ));
 }
 
@@ -291,13 +291,13 @@ fn sim5x5_large() {
         vec![9, 4, 5, 3, 2],
         vec![4, 6, 6, 1, 0],
     ];
-    let result = calculate(input, 1000000).unwrap();
+    let result = calculate(input, SIM_ITERATIONS).unwrap();
     dbg!(result);
     assert!(float_cmp::approx_eq!(
         f64,
         result,
         0.26314046636138944,
-        epsilon = 0.002
+        epsilon = SIM_PRECISION
     ));
 }
 
@@ -314,7 +314,7 @@ fn sim9x7_error() {
         vec![0, 0, 0, 0, 0, 0, 1],
         vec![0, 1, 0, 0, 2, 1, 0],
     ];
-    let output = calculate(input, 1000000).unwrap();
+    let output = calculate(input, SIM_ITERATIONS).unwrap();
     dbg!(output);
     assert_eq!(output, -3.0);
 }

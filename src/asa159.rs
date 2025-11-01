@@ -78,15 +78,16 @@ fn i4vec_sum(a: &Vec<i32>) -> i32 {
     a.iter().sum()
 }
 
-fn r8_uniform_01(seed: &mut i32) -> f64 {
+/*fn r8_uniform_01(seed: &mut i32) -> f64 {
     let k = *seed / 127773;
     *seed = 16807 * (*seed - k * 127773) - k * 2836;
     if *seed < 0 {
         *seed += i32::MAX;
     }
     let r = *seed as f64 * 4.656612875E-10f64;
+    dbg!(r);
     return r;
-}
+}*/
 
 pub fn rcont2(
     nrow: i32,
@@ -94,7 +95,6 @@ pub fn rcont2(
     nrowt: &Vec<i32>,
     ncolt: &Vec<i32>,
     key: &mut i32,
-    seed: &mut i32,
     fact: &Vec<f64>,
 ) -> Result<Vec<i32>, (i32, &'static str)> {
     let mut done1: i32;
@@ -168,6 +168,7 @@ pub fn rcont2(
     }
     jc = ntotal;
     let mut matrix = vec![0; (nrow * ncol) as usize];
+    let mut rng = fastrand::Rng::new();
     for l in 0..(nrow - 1) {
         nrowtl = nrowt[l as usize];
         ia = nrowtl;
@@ -186,7 +187,7 @@ pub fn rcont2(
                 }
                 break;
             } else {
-                r = r8_uniform_01(seed);
+                r = rng.f64();
                 done1 = 0;
                 loop {
                     nlm = ((ia * id) as f64 / ie as f64 + 0.5f64) as i32;
@@ -256,7 +257,7 @@ pub fn rcont2(
                     if done2 != 0 {
                         break;
                     }
-                    r = r8_uniform_01(seed);
+                    r = rng.f64();
                     r *= sumprb;
                 }
                 matrix[(l + m * nrow) as usize] = nlm;
