@@ -45,18 +45,18 @@ _AMD Ryzen 5600X running LMDE 7_
 
 ```
 -- EXACT TEST --
-fisher-rxc      0.2631  in 20.29s
-rpy2            0.2631  in 20.62s
+fisher-rxc	0.2631	in 20.04s
+rpy2		0.2631	in 20.64s
 -----------
-fisher-rxc      0.9981  in 4.67s
-rpy2            0.9981  in 5.28s
+fisher-rxc	0.9981	in 4.71s
+rpy2		0.9981	in 5.28s
 -----------
 -- MONTE-CARLO SIMULATION --
-fisher-rxc      0.2630  in 0.65s
-rpy2            0.2632  in 30.33s
+fisher-rxc	0.2631	in 0.58s
+rpy2		0.2630	in 31.53s
 -----------
-fisher-rxc      0.9981  in 0.68s
-rpy2            0.9981  in 37.14s
+fisher-rxc	0.9981	in 0.67s
+rpy2		0.9981	in 36.75s
 -----------
 ```
 
