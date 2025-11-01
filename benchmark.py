@@ -1,11 +1,10 @@
+#! /usr/bin/env python3
 import fisher
 import time
-import rpy2.robjects.numpy2ri
+import rpy2.robjects as ro
 from rpy2.robjects.packages import importr
-rpy2.robjects.numpy2ri.activate()
 stats = importr('stats')
-import numpy as np
-
+r = ro.r
 
 tests = [
 	[[8, 8, 3, 5, 2], [5, 3, 3, 0, 2], [8, 9, 9, 0, 0], [9, 4, 5, 3, 2], [4, 6, 6, 1, 0]],
@@ -14,16 +13,16 @@ tests = [
 
 print("-- EXACT TEST --")
 for a in tests:
-	m = np.array(a)
 
 	start = time.time()
 	result = fisher.exact(a,200000000)
 	end = time.time()
 	print("fisher-rxc", "{:.4f}".format(result), "in {:.2f}s".format(end-start),sep="\t");
 
-
+	seq = [element for row in a for element in row]
+	matrix = r.matrix(ro.IntVector(seq), nrow=5, ncol=5)
 	start = time.time()
-	result = stats.fisher_test(m, workspace=2e8)[0][0]
+	result = stats.fisher_test(matrix, workspace=2e8)[0][0]
 	end = time.time()
 	print("rpy2\t", "{:.4f}".format(result), "in {:.2f}s".format(end-start),sep="\t")
 
@@ -31,7 +30,6 @@ for a in tests:
   
 print("-- MONTE-CARLO SIMULATION --")
 for a in tests:
-	m = np.array(a)
 
 	start = time.time()
 	result = fisher.sim(a,10000000)
@@ -39,8 +37,10 @@ for a in tests:
 	print("fisher-rxc", "{:.4f}".format(result), "in {:.2f}s".format(end-start), sep="\t");
 
 
+	seq = [e for r in a for e in r]
+	matrix = r.matrix(ro.IntVector(seq), nrow=5, ncol=5)
 	start = time.time()
-	result = stats.fisher_test(m, simulate_p_value=True, B=10000000)[0][0]
+	result = stats.fisher_test(matrix, simulate_p_value=True, B=10000000)[0][0]
 	end = time.time()
 	print("rpy2\t", "{:.4f}".format(result), "in {:.2f}s".format(end-start), sep="\t")
 

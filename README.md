@@ -63,6 +63,7 @@ rpy2            0.9981  in 19.38s
 ## Building
 
 **Windows**
+
 ```sh
 python3 -m venv .env
 .env/Scripts/Activate.ps1
@@ -70,10 +71,15 @@ maturin develop --release
 ```
 
 **Linux**
+
 ```sh
+sudo apt install python3-maturin
 python3 -m venv .env
 source .env/bin/activate
 maturin develop --release
+# For benchmarks:
+sudo apt install r-base
+pip install numpy rpy2
 ```
 
 ## References
