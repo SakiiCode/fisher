@@ -189,7 +189,6 @@ pub fn rcont2(
             } else {
                 r = rng.f64();
                 done1 = 0;
-                #[cfg_attr(rustfmt, rustfmt_skip)]
                 loop {
                     nlm = ((ia * id) as f64 / ie as f64 + 0.5f64) as u32;
                     iap = ia + 1;

@@ -24,7 +24,7 @@ pub fn calculate(table: Vec<Vec<i32>>, workspace: Option<i32>) -> Result<f64, In
         None => {
             let sum: u32 = row_sum.iter().sum::<i32>() as u32;
             let exp = sum / 20;
-            (200 * 10i32.pow(exp.clamp(3, 6))).into()
+            200 * 10i32.pow(exp.clamp(3, 6))
         }
     };
     //dbg!(wsize);
@@ -40,12 +40,12 @@ pub fn calculate(table: Vec<Vec<i32>>, workspace: Option<i32>) -> Result<f64, In
         let mut emin = 0.0;
         let mut prt = 0.0;
         let mut pre = 0.0;
-        let ws = wsize.try_into().unwrap();
+        let ws = wsize;
         code = asa643::fexact_(
-            nrow.into(),
-            ncol.into(),
+            nrow,
+            ncol,
             seq.as_mut_ptr(),
-            nrow.into(),
+            nrow,
             &mut expect,
             &mut percnt,
             &mut emin,
@@ -97,7 +97,12 @@ fn proc3x2() {
     let input = vec![vec![1000, 626, 782], vec![976, 814, 892]];
     let output = calculate(input, None).unwrap();
     dbg!(output);
-    assert!(float_cmp::approx_eq!(f64, output, 0.0001679, epsilon = 0.000001));
+    assert!(float_cmp::approx_eq!(
+        f64,
+        output,
+        0.0001679,
+        epsilon = 0.000001
+    ));
 }
 
 #[test]
@@ -131,7 +136,11 @@ fn proc3x3_zero() {
 
 #[test]
 fn proc3x4_large() {
-    let input = vec![vec![11, 12, 18, 15], vec![15, 13, 13, 15], vec![15, 19, 19, 15]];
+    let input = vec![
+        vec![11, 12, 18, 15],
+        vec![15, 13, 13, 15],
+        vec![15, 19, 19, 15],
+    ];
     let output = calculate(input, None).unwrap();
     dbg!(output);
     assert!(float_cmp::approx_eq!(

@@ -141,7 +141,7 @@ where
 fn next_cell(xx: usize, yy: usize, r: usize, c: usize) -> (usize, usize) {
     let mut next_x = xx;
     let mut next_y = yy;
-    let yellow = ((xx + yy) % 2) == 0;
+    let yellow = (xx + yy).is_multiple_of(2);
     if (yellow && xx == 0) || (!yellow && xx + 2 == c) {
         //print!("red ");
         next_y += 1;

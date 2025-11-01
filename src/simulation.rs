@@ -68,7 +68,7 @@ fn find_statistic_c(table: &Vec<u32>, nrow: usize, ncol: usize, fact: &Vec<f64>)
     let mut ans = 0.0;
     for i in 0..nrow {
         for j in 0..ncol {
-            ans -= fact[table[(i * ncol + j) as usize] as usize];
+            ans -= fact[table[i * ncol + j] as usize];
         }
     }
     return ans;
