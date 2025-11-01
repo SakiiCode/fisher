@@ -1,5 +1,5 @@
 [build-system]
-requires = ["maturin>=1.7,<2.0"]
+requires = ["maturin>=1.9,<2.0"]
 build-backend = "maturin"
 
 [project]
@@ -16,6 +16,7 @@ classifiers = [
 
 ]
 description = "Fast multithreaded implementation for calculating Fisher's exact test for any RxC sized table"
+readme = "README.md"
 dynamic = ["version"]
 
 [project.urls]
