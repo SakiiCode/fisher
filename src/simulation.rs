@@ -84,22 +84,12 @@ fn generate(
     col_sum: &Vec<i32>,
     fact: &Vec<f64>,
 ) -> Result<Vec<i32>, (i32, &'static str)> {
-    // rand: 42-46 ms
-    // let mut rng = rand::rng();
-    // let mut seed = rand::Rng::random::<i32>(&mut rng);
-    // nanorand: 42-44 ms
-    // let mut rng = nanorand::tls_rng();
-    // let mut seed = nanorand::Rng::generate::<i32>(&mut rng);
-    // fastrand: 41-43 ms
-    let mut seed = fastrand::i32(..);
-
     let result = asa159::rcont2(
         i32::try_from(row_sum.len()).unwrap(),
         i32::try_from(col_sum.len()).unwrap(),
         row_sum,
         col_sum,
         &mut 0,
-        &mut seed,
         fact,
     );
 
