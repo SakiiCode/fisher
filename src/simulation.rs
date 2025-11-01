@@ -32,6 +32,11 @@ pub fn calculate(table: Vec<Vec<i32>>, iterations: i32) -> Result<f64, Infallibl
         return Ok(-1.0);
     }
 
+    let table: Vec<Vec<u32>> = table
+        .iter()
+        .map(|row| row.iter().map(|e| (*e).try_into().unwrap()).collect())
+        .collect();
+
     let nrow = row_sum.len();
     let ncol = col_sum.len();
     let statistic = find_statistic_r(&table, &fact) + f64::EPSILON;
@@ -59,17 +64,17 @@ pub fn calculate(table: Vec<Vec<i32>>, iterations: i32) -> Result<f64, Infallibl
     return Ok(pvalue);
 }
 
-fn find_statistic_c(table: &Vec<i32>, nrow: usize, ncol: usize, fact: &Vec<f64>) -> f64 {
+fn find_statistic_c(table: &Vec<u32>, nrow: usize, ncol: usize, fact: &Vec<f64>) -> f64 {
     let mut ans = 0.0;
     for i in 0..nrow {
         for j in 0..ncol {
-            ans -= fact[table[i * ncol + j] as usize];
+            ans -= fact[table[(i * ncol + j) as usize] as usize];
         }
     }
     return ans;
 }
 
-fn find_statistic_r(table: &Vec<Vec<i32>>, fact: &Vec<f64>) -> f64 {
+fn find_statistic_r(table: &Vec<Vec<u32>>, fact: &Vec<f64>) -> f64 {
     let mut ans = 0.0;
     for row in table {
         for cell in row {
@@ -80,13 +85,14 @@ fn find_statistic_r(table: &Vec<Vec<i32>>, fact: &Vec<f64>) -> f64 {
 }
 
 fn generate(
-    row_sum: &Vec<i32>,
-    col_sum: &Vec<i32>,
+    row_sum: &Vec<u32>,
+    col_sum: &Vec<u32>,
     fact: &Vec<f64>,
-) -> Result<Vec<i32>, (i32, &'static str)> {
+) -> Result<Vec<u32>, (i32, &'static str)> {
+    #[rustfmt::skip]
     let result = asa159::rcont2(
-        i32::try_from(row_sum.len()).unwrap(),
-        i32::try_from(col_sum.len()).unwrap(),
+        row_sum.len(),
+        col_sum.len(),
         row_sum,
         col_sum,
         &mut 0,

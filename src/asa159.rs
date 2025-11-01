@@ -58,7 +58,7 @@ fn i4mat_print_some(
         for i in i2lo..=i2hi {
             print!("{:>5}:", i - 1);
             for j in j2lo..=j2hi {
-                print!("  {:>6}", a[(i - 1 + (j - 1) * m) as usize],);
+                print!("  {:>6}", a[(i - 1 + (j - 1) * m)],);
             }
             println!("");
         }
@@ -70,11 +70,11 @@ fn i4vec_print(mut n: i32, a: &Vec<i32>, mut title: &str) {
     println!("{}", title);
     println!("");
     for i in 0..n {
-        println!("  {:>6}: {:>8}", i, a[i as usize],);
+        println!("  {:>6}: {:>8}", i, a[i],);
     }
 }*/
 
-fn i4vec_sum(a: &Vec<i32>) -> i32 {
+fn i4vec_sum(a: &Vec<u32>) -> u32 {
     a.iter().sum()
 }
 
@@ -90,36 +90,36 @@ fn i4vec_sum(a: &Vec<i32>) -> i32 {
 }*/
 
 pub fn rcont2(
-    nrow: i32,
-    ncol: i32,
-    nrowt: &Vec<i32>,
-    ncolt: &Vec<i32>,
+    nrow: usize,
+    ncol: usize,
+    nrowt: &Vec<u32>,
+    ncolt: &Vec<u32>,
     key: &mut i32,
     fact: &Vec<f64>,
-) -> Result<Vec<i32>, (i32, &'static str)> {
+) -> Result<Vec<u32>, (i32, &'static str)> {
     let mut done1: i32;
     let mut done2: i32 = 0;
-    let mut ia: i32;
-    let mut iap: i32;
-    let mut ib: i32 = 0;
-    let mut ic: i32;
-    let mut id: i32;
-    let mut idp: i32;
-    let mut ie: i32;
-    let mut igp: i32;
-    let mut ihp: i32;
-    let mut ii: i32;
-    let mut iip: i32;
-    let mut j: i32;
-    let mut jc: i32;
-    let mut jwork: Vec<i32>;
+    let mut ia: u32;
+    let mut iap: u32;
+    let mut ib: u32 = 0;
+    let mut ic: u32;
+    let mut id: u32;
+    let mut idp: u32;
+    let mut ie: u32;
+    let mut igp: u32;
+    let mut ihp: u32;
+    let mut ii: u32;
+    let mut iip: u32;
+    let mut j: u32;
+    let mut jc: u32;
+    let mut jwork: Vec<u32>;
     let mut lsm: i32;
     let mut lsp: i32;
-    let mut nll: i32;
-    let mut nlm: i32;
-    let mut nlmp: i32;
-    let mut nrowtl: i32;
-    let mut ntotal: i32 = 0;
+    let mut nll: u32;
+    let mut nlm: u32;
+    let mut nlmp: u32;
+    let mut nrowtl: u32;
+    let mut ntotal: u32 = 0;
     let mut r: f64;
     let mut sumprb: f64;
     let mut x: f64;
@@ -139,7 +139,7 @@ pub fn rcont2(
             ));
         }
         for i in 0..nrow {
-            if nrowt[i as usize] <= 0 {
+            if nrowt[i] <= 0 {
                 return Err((
                     3,
                     "RCONT - Fatal error!\n\tAn entry in the row sum vector is not positive.",
@@ -147,7 +147,7 @@ pub fn rcont2(
             }
         }
         for j in 0..ncol {
-            if ncolt[j as usize] <= 0 {
+            if ncolt[j] <= 0 {
                 return Err((
                     4,
                     "RCONT - Fatal error!\n\tAn entry in the column sum vector is not positive.",
@@ -162,20 +162,20 @@ pub fn rcont2(
         }
         ntotal = i4vec_sum(ncolt);
     }
-    jwork = vec![0i32; ncol as usize];
+    jwork = vec![0; ncol];
     for i in 0..(ncol - 1) {
-        jwork[i as usize] = ncolt[i as usize];
+        jwork[i] = ncolt[i];
     }
     jc = ntotal;
-    let mut matrix = vec![0; (nrow * ncol) as usize];
+    let mut matrix = vec![0; nrow * ncol];
     let mut rng = fastrand::Rng::new();
     for l in 0..(nrow - 1) {
-        nrowtl = nrowt[l as usize];
+        nrowtl = nrowt[l];
         ia = nrowtl;
         ic = jc;
         jc -= nrowtl;
         for m in 0..(ncol - 1) {
-            id = jwork[m as usize];
+            id = jwork[m];
             ie = ic;
             ic -= id;
             ib = ie - ia;
@@ -183,14 +183,15 @@ pub fn rcont2(
             if ie == 0 {
                 ia = 0;
                 for j in m..ncol {
-                    matrix[(l + j * nrow) as usize] = 0;
+                    matrix[l + j * nrow] = 0;
                 }
                 break;
             } else {
                 r = rng.f64();
                 done1 = 0;
+                #[cfg_attr(rustfmt, rustfmt_skip)]
                 loop {
-                    nlm = ((ia * id) as f64 / ie as f64 + 0.5f64) as i32;
+                    nlm = ((ia * id) as f64 / ie as f64 + 0.5f64) as u32;
                     iap = ia + 1;
                     idp = id + 1;
                     igp = idp - nlm;
@@ -198,10 +199,10 @@ pub fn rcont2(
                     nlmp = nlm + 1;
                     iip = ii + nlmp;
                     x = (fact[(iap - 1) as usize]
-                        + fact[ib as usize]
-                        + fact[ic as usize]
+                        + fact[(ib) as usize]
+                        + fact[(ic) as usize]
                         + fact[(idp - 1) as usize]
-                        - fact[ie as usize]
+                        - fact[(ie) as usize]
                         - fact[(nlmp - 1) as usize]
                         - fact[(igp - 1) as usize]
                         - fact[(ihp - 1) as usize]
@@ -260,17 +261,16 @@ pub fn rcont2(
                     r = rng.f64();
                     r *= sumprb;
                 }
-                matrix[(l + m * nrow) as usize] = nlm;
+                matrix[l + m * nrow] = nlm;
                 ia -= nlm;
-                jwork[m as usize] -= nlm;
+                jwork[m] -= nlm;
             }
         }
-        matrix[(l + (ncol - 1) * nrow) as usize] = ia;
+        matrix[l + (ncol - 1) * nrow] = ia;
     }
     for j in 0..(ncol - 1) {
-        matrix[(nrow - 1 + j * nrow) as usize] = jwork[j as usize];
+        matrix[nrow - 1 + j * nrow] = jwork[j];
     }
-    matrix[(nrow - 1 + (ncol - 1) * nrow) as usize] =
-        ib - matrix[(nrow - 1 + (ncol - 2) * nrow) as usize];
+    matrix[nrow - 1 + (ncol - 1) * nrow] = ib - matrix[nrow - 1 + (ncol - 2) * nrow];
     return Ok(matrix);
 }
