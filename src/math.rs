@@ -1,19 +1,9 @@
-use std::ops::{AddAssign, DivAssign};
-
-use wide::f64x4;
-
-const N_U: usize = 4;
-const N_F: f64 = 4.0;
-const DEFAULT_SIMD: [f64; 4] = [1.0, 2.0, 3.0, 4.0];
-type Simd = f64x4;
-
 pub struct Quotient {
     container: Vec<f64>,
     initial_sln: f64,
     initial_idx: usize,
     idx: usize,
     solution: f64,
-    offset_simd: Simd, //Simd<f64, N_U>,
 }
 
 impl Quotient {
@@ -26,7 +16,6 @@ impl Quotient {
             initial_idx: 0,
             idx: 0,
             solution: 1.0,
-            offset_simd: Simd::splat(N_F), //Simd::splat(N_F),
         };
         result.mul_fact(init_n);
         result.div_fact(init_d);
