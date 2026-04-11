@@ -27,9 +27,9 @@ Calculate Fisher's exact test for 2D list by multithreaded Monte Carlo simulatio
 `fisher.recursive(table)`
 
 > [!WARNING]
-> This is experimental and may not work on every CPU platform and generation. Any feedback is appreciated
+> This function is experimental
 
-Calculate Fisher's exact test by a multithreaded SIMD recursive algorithm. Despite extensive optimization efforts, this is still generally **much slower** than the _fisher.exact_ function. Only use for small tables with low numbers.
+Calculate Fisher's exact test by a multithreaded SIMD recursive algorithm. Despite extensive optimization efforts, this is still generally **much slower** than the _fisher.exact_ function. Only use for tables with small numbers.
 
 ### Return values
 
