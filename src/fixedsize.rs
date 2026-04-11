@@ -1,13 +1,7 @@
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
-use std::{
-    cell::RefCell,
-    cmp::min,
-    convert::Infallible,
-    num::NonZero,
-    ops::SubAssign,
-    simd::{num::SimdInt, LaneCount, Simd, SupportedLaneCount},
-};
+use std::{cell::RefCell, cmp::min, convert::Infallible, num::NonZero, ops::SubAssign};
 use thread_local::ThreadLocal;
+use wide::i32x4;
 
 use crate::math::Quotient;
 
@@ -17,29 +11,31 @@ macro_rules! set {
     };
 }
 
+type Simd = wide::i32x4;
+const N: usize = 4;
+
 // faster if not inlined
 #[inline(never)]
-fn fill<const N: usize>(
+fn fill(
     mat_new: [i32; N * N],
     r_sum: &[i32; N + 1],
     c_sum: &[i32; N + 1],
     p_0: f64,
     tl: &ThreadLocal<Box<RefCell<Quotient>>>,
-) -> f64
-where
-    LaneCount<N>: SupportedLaneCount,
-{
+) -> f64 {
     //print!("{:?} -> ", &mat_new);
-    let mut r_vec_red: Simd<i32, N> = Simd::from_slice(c_sum);
+    let r_vec_red_arr: [i32; N] = (&c_sum[0..N]).try_into().unwrap();
+    let mut r_vec_red: Simd = Simd::from(r_vec_red_arr);
 
-    let mut r_vec = [Simd::from_array([0; N]); N];
+    let mut r_vec = [Simd::from([0; N]); N];
     for i in 0..N {
         let start = i * N;
-        r_vec[i] = Simd::from_slice(&mat_new[start..]);
+        let arr: [i32; N] = (&mat_new[start..start + N]).try_into().unwrap();
+        r_vec[i] = Simd::from(arr);
         r_vec_red.sub_assign(r_vec[i]);
     }
 
-    let r_red_sum = r_vec_red.reduce_sum();
+    let r_red_sum = r_vec_red.reduce_add();
     let mut r_last = r_sum[N];
 
     if r_last < r_red_sum {
@@ -48,9 +44,10 @@ where
     }
     r_last -= r_red_sum;
 
-    let mut c_vec_red: Simd<i32, N> = Simd::from_slice(r_sum);
+    let c_vec_red_arr: [i32; N] = (&r_sum[0..N]).try_into().unwrap();
+    let mut c_vec_red: Simd = Simd::from(c_vec_red_arr);
 
-    let col = r_vec.map(|row| row.reduce_sum());
+    let col = r_vec.map(|row| row.reduce_add());
     let col_simd = Simd::from(col);
     c_vec_red.sub_assign(col_simd);
 
@@ -84,7 +81,7 @@ where
     }
 }
 
-pub fn dfs<const N: usize>(
+pub fn dfs_4(
     mat_new: [i32; N * N],
     xx: usize,
     yy: usize,
@@ -94,12 +91,10 @@ pub fn dfs<const N: usize>(
     tl: &ThreadLocal<Box<RefCell<Quotient>>>,
     threads: i32,
     max_threads: i32,
-) -> f64
-where
-    LaneCount<N>: SupportedLaneCount,
-{
+) -> f64 {
     let r = r_sum.len();
-    let max_1 = r_sum[xx] - Simd::from_slice(&mat_new[xx * N..]).reduce_sum();
+    let max_1_arr: [i32; N] = mat_new[(xx * N)..((xx + 1) * N)].try_into().unwrap();
+    let max_1 = r_sum[xx] - i32x4::new(max_1_arr).reduce_add();
 
     let c = c_sum.len();
     let mut max_2 = c_sum[yy];
@@ -114,11 +109,11 @@ where
         let mut mat_new2 = mat_new.clone();
         set!(mat_new2, xx, yy, c - 1, k);
         if xx + 2 == r && yy + 2 == c {
-            return fill::<N>(mat_new2, r_sum, c_sum, p_0, tl);
+            return fill(mat_new2, r_sum, c_sum, p_0, tl);
         }
 
         let (next_x, next_y) = next_cell(xx, yy, r, c);
-        return dfs::<N>(
+        return dfs_4(
             mat_new2,
             next_x,
             next_y,
@@ -196,12 +191,9 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
             println!("ERROR: Invalid table size!");
             return Ok(-1.0);
         }
-        2 => 1,
-        3 => 2,
-        4 | 5 => 4,
-        6..=9 => 8,
+        2..=5 => 4,
         _ => {
-            println!("ERROR: fisher.recursive() can only be used with up to 9x9 matrices!");
+            println!("ERROR: fisher.recursive() can only be used with up to 5x5 matrices!");
             return Ok(-1.0);
         }
     };
@@ -217,54 +209,23 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
         .unwrap_or(NonZero::new(12).unwrap())
         .get() as i32;
 
+    let row_sum_arr:[i32;5] = row_sum.try_into().unwrap();
+    let col_sum_arr:[i32;5] = col_sum.try_into().unwrap();
+
     let p = match lanes {
-        1 => dfs::<1>(
-            [0; 1],
-            0,
-            0,
-            &row_sum.try_into().unwrap(),
-            &col_sum.try_into().unwrap(),
-            stat,
-            &tl,
-            0,
-            max_threads,
-        ),
-        2 => dfs::<2>(
-            [0; 4],
-            0,
-            0,
-            &row_sum.try_into().unwrap(),
-            &col_sum.try_into().unwrap(),
-            stat,
-            &tl,
-            0,
-            max_threads,
-        ),
-        4 => dfs::<4>(
+        4 => dfs_4(
             [0; 16],
             0,
             0,
-            &row_sum.try_into().unwrap(),
-            &col_sum.try_into().unwrap(),
-            stat,
-            &tl,
-            0,
-            max_threads,
-        ),
-        8 => dfs::<8>(
-            [0; 64],
-            0,
-            0,
-            &row_sum.try_into().unwrap(),
-            &col_sum.try_into().unwrap(),
+            &row_sum_arr,
+            &col_sum_arr,
             stat,
             &tl,
             0,
             max_threads,
         ),
         _ => {
-            println!("Error in matching lane count. This should never happen");
-            return Ok(-1.0);
+            unreachable!("Error in matching lane count. This should never happen");
         }
     };
 

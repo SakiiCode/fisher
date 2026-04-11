@@ -1,11 +1,11 @@
-use std::{
-    ops::{AddAssign, DivAssign},
-    simd::{num::SimdFloat, Simd},
-};
+use std::ops::{AddAssign, DivAssign};
+
+use wide::f64x4;
 
 const N_U: usize = 4;
 const N_F: f64 = 4.0;
 const DEFAULT_SIMD: [f64; 4] = [1.0, 2.0, 3.0, 4.0];
+type Simd = f64x4;
 
 pub struct Quotient {
     container: Vec<f64>,
@@ -13,7 +13,7 @@ pub struct Quotient {
     initial_idx: usize,
     idx: usize,
     solution: f64,
-    offset_simd: Simd<f64, N_U>,
+    offset_simd: Simd, //Simd<f64, N_U>,
 }
 
 impl Quotient {
@@ -26,7 +26,7 @@ impl Quotient {
             initial_idx: 0,
             idx: 0,
             solution: 1.0,
-            offset_simd: Simd::splat(N_F),
+            offset_simd: Simd::splat(N_F), //Simd::splat(N_F),
         };
         result.mul_fact(init_n);
         result.div_fact(init_d);
@@ -43,18 +43,14 @@ impl Quotient {
 
     pub fn div_fact(&mut self, arr: &[i32]) {
         for x in arr {
-            let mut i = 0usize;
-            let max = *x as usize;
-            let mut d_simd: Simd<f64, N_U> = Simd::from_array(DEFAULT_SIMD);
-            while i < max {
-                let slice = &self.container[(self.idx + i)..(self.idx + max)];
-                let mut num = Simd::load_or(slice, d_simd);
-                num.div_assign(d_simd);
-                self.solution *= num.reduce_product();
-                d_simd.add_assign(self.offset_simd);
-                i += N_U;
+            for i in 1..=*x {
+                unsafe {
+                    let num = *self.container.get_unchecked(self.idx);
+                    self.solution *= num / i as f64;
+                }
+
+                self.idx += 1;
             }
-            self.idx += max;
         }
     }
 
@@ -86,7 +82,12 @@ fn test1() {
 
     let result = q.solve();
 
-    assert!(float_cmp::approx_eq!(f64, result, 1.85572e-5, epsilon = 1e-9));
+    assert!(float_cmp::approx_eq!(
+        f64,
+        result,
+        1.85572e-5,
+        epsilon = 1e-9
+    ));
 
     let mut q = Quotient::new(19, &[7, 6, 6, 6], &[13]);
 
