@@ -17,7 +17,7 @@ fn fill_4(
     r_sum: &[i32; 4 + 1],
     c_sum: &[i32; 4 + 1],
     p_0: f64,
-    tl: &ThreadLocal<Box<RefCell<Quotient>>>,
+    p_1: &mut Quotient,
 ) -> f64 {
     type Simd = wide::i32x4;
     const N: usize = 4;
@@ -50,17 +50,6 @@ fn fill_4(
     let col_simd = Simd::from(col);
     c_vec_red.sub_assign(col_simd);
 
-    let p_1_ref = tl.get_or(|| {
-        // r_sum is N+1 length, SIMD cannot be used
-        let n: i32 = r_sum.iter().sum();
-        let init_d = vec![n];
-        let mut init_n = Vec::with_capacity(2 * (N + 1) + 1);
-        init_n.extend_from_slice(r_sum);
-        init_n.extend_from_slice(c_sum);
-        Box::new(RefCell::new(Quotient::new(n as usize, &init_n, &init_d)))
-    });
-
-    let mut p_1 = (p_1_ref).borrow_mut();
     p_1.clear();
 
     p_1.div_fact(&mat_new);
@@ -111,7 +100,13 @@ pub fn dfs_4(
         let mut mat_new2 = mat_new.clone();
         set!(mat_new2, xx, yy, c - 1, k);
         if xx + 2 == r && yy + 2 == c {
-            return fill_4(mat_new2, r_sum, c_sum, p_0, tl);
+            let p_1_ref = tl.get_or(|| {
+                let p_1 = init_quotient(N, r_sum, c_sum);
+                Box::new(RefCell::new(p_1))
+            });
+            let mut p_1 = (p_1_ref).borrow_mut();
+
+            return fill_4(mat_new2, r_sum, c_sum, p_0, &mut *p_1);
         }
 
         let (next_x, next_y) = next_cell(xx, yy, r, c);
@@ -123,7 +118,7 @@ pub fn dfs_4(
             c_sum,
             p_0,
             tl,
-            threads + max,
+            threads + max - 1,
             max_threads,
         );
     };
@@ -166,7 +161,13 @@ pub fn dfs_8(
         let mut mat_new2 = mat_new.clone();
         set!(mat_new2, xx, yy, c - 1, k);
         if xx + 2 == r && yy + 2 == c {
-            return fill_8(mat_new2, r_sum, c_sum, p_0, tl);
+            let p_1_ref = tl.get_or(|| {
+                let p_1 = init_quotient(N, r_sum, c_sum);
+                Box::new(RefCell::new(p_1))
+            });
+            let mut p_1 = (p_1_ref).borrow_mut();
+
+            return fill_8(mat_new2, r_sum, c_sum, p_0, &mut *p_1);
         }
 
         let (next_x, next_y) = next_cell(xx, yy, r, c);
@@ -178,7 +179,7 @@ pub fn dfs_8(
             c_sum,
             p_0,
             tl,
-            threads + max,
+            threads + max - 1,
             max_threads,
         );
     };
@@ -197,7 +198,7 @@ fn fill_8(
     r_sum: &[i32; 8 + 1],
     c_sum: &[i32; 8 + 1],
     p_0: f64,
-    tl: &ThreadLocal<Box<RefCell<Quotient>>>,
+    p_1: &mut Quotient,
 ) -> f64 {
     type Simd = wide::i32x8;
     const N: usize = 8;
@@ -230,17 +231,6 @@ fn fill_8(
     let col_simd = Simd::from(col);
     c_vec_red.sub_assign(col_simd);
 
-    let p_1_ref = tl.get_or(|| {
-        // r_sum is N+1 length, SIMD cannot be used
-        let n: i32 = r_sum.iter().sum();
-        let init_d = vec![n];
-        let mut init_n = Vec::with_capacity(2 * (N + 1) + 1);
-        init_n.extend_from_slice(r_sum);
-        init_n.extend_from_slice(c_sum);
-        Box::new(RefCell::new(Quotient::new(n as usize, &init_n, &init_d)))
-    });
-
-    let mut p_1 = (p_1_ref).borrow_mut();
     p_1.clear();
 
     p_1.div_fact(&mat_new);
@@ -374,6 +364,18 @@ pub fn calculate(table: Vec<Vec<i32>>) -> Result<f64, Infallible> {
     };
 
     return Ok(p);
+}
+
+#[expect(non_snake_case)]
+fn init_quotient(N: usize, r_sum: &[i32], c_sum: &[i32]) -> Quotient {
+    // r_sum is N+1 length, SIMD cannot be used
+    let n: i32 = r_sum.iter().sum();
+    let init_d = vec![n];
+    let mut init_n = Vec::with_capacity(2 * (N + 1) + 1);
+    init_n.extend_from_slice(r_sum);
+    init_n.extend_from_slice(c_sum);
+
+    Quotient::new(n as usize, &init_n, &init_d)
 }
 
 #[test]
@@ -551,7 +553,6 @@ fn fixed5x5_large() {
 }
 
 #[test]
-#[ignore]
 fn fixed9x7() {
     let input = vec![
         vec![0, 0, 2, 0, 0, 0, 1],
