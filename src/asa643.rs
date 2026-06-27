@@ -1,20 +1,18 @@
-#![allow(non_camel_case_types, deprecated)]
-use libc::{c_int, int32_t};
+use std::ffi::{c_double, c_int};
 
-type integer = int32_t;
-type doublereal = libc::c_double;
+
 
 extern "C" {
     pub fn fexact_(
-        nrow: integer,
-        ncol: integer,
-        table: *mut doublereal,
-        ldtabl: integer,
-        expect: *mut doublereal,
-        percnt: *mut doublereal,
-        emin: *mut doublereal,
-        prt: *mut doublereal,
-        pre: *mut doublereal,
-        ws: integer,
+        nrow: c_int,
+        ncol: c_int,
+        table: *mut c_double,
+        ldtabl: c_int,
+        expect: *mut c_double,
+        percnt: *mut c_double,
+        emin: *mut c_double,
+        prt: *mut c_double,
+        pre: *mut c_double,
+        ws: c_int,
     ) -> c_int;
 }

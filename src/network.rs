@@ -1,12 +1,8 @@
 use std::{convert::Infallible, sync::Mutex};
 
-use lazy_static::lazy_static;
-
 use crate::asa643;
 
-lazy_static! {
-    static ref FEXACT_LOCK: Mutex<()> = Mutex::new(());
-}
+static FEXACT_LOCK: Mutex<()> = Mutex::new(());
 
 pub fn calculate(table: Vec<Vec<i32>>, workspace: Option<i32>) -> Result<f64, Infallible> {
     let row_sum: Vec<i32> = table.iter().map(|row| row.iter().sum()).collect();
